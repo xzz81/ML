@@ -4,4 +4,7 @@ SVM
 3. 分类规则 classification rules
 4. Estimating hyperplane(estimating $\omega,b $)
    to minimize the margin
-    $2\delta = \frac{1}{||\omega||}\omega ^T(x_1 -x_2)$
+    $2\delta = \frac{1}{||\omega||}\omega ^T(x_1 -x_2)$,
+ when $\omega ^T +x = \pm1$  
+we just consider  $\underset{\omega , b}{\min}  \frac{1}{||\omega||}$
+
