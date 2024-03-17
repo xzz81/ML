@@ -1,5 +1,5 @@
 ---
-title: "Project3"
+title: " Data Mining and Machine Learning project"
 output:
   pdf_document:
     toc: true
@@ -15,7 +15,7 @@ output:
     echo: false
 ---
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE,message=FALSE}
 # Load necessary library
 library(dplyr)
 library(ggplot2)
@@ -31,6 +31,8 @@ library(class)
 library(MASS)
 library(neuralnet)
 library(nnet)
+library(knitr)
+
 ```
 
 ```{r, echo=FALSE, results='hide'}
@@ -40,7 +42,29 @@ group_23 <- read.csv('group_23.csv')
 data <- group_23[group_23$Semer == 'CL0',]
 ```
 
+# Introduction
+
+In recent years, more and more drugs have begun to spread across various age groups. The intersection of personality psychology and substance use has garnered significant interest within the scientific community. This report collects 1885 respondents with 12 attributes, including education level, age, gender, country of residence, and ethnicity, providing a holistic view of each respondent NEO-FFI-R, encompassing five major dimensions of human personality (Neuroticism, Extraversion, Openness to Experience, Agreeableness, and Conscientiousness), alongside BIS-11 and ImpSSscales that measure impulsivity and sensation seeking.
+
+The primary aim of this report is to unravel the intricate relationships between personality traits, demographic factors, and drug consumption patterns.
+
+This report is structured as follows: The first section provides a comprehensivereview of the relevant literature, establishing a theoretical foundation for the subsequent analysis. The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks. The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
+
 # Data Processing
+
+Based on the dataset, we found that most respondents believe they belong to Group 'CL0' . Therefore, we conducted our analysis based on the data from the 'Semer' that only included Group 'CL0'. Additionally, based on the general distribution across the various groups for 'Amyl', we have divided the seven groups into four categories, as follows: 'Never Used' : CL0, 'Used Over a Decade Ago' : CL1, 'Used in Last Decade' : CL2, 'Used in Last Year to Day' : (CL3, CL4, CL5, CL6). Finally, to facilitate the creation of classification models, we have factorized these groups.
+
+```{r echo=FALSE, fig.cap="Figure 1",warning=FALSE,message=FALSE}
+library(knitr)
+library(kableExtra)
+amyl_usage <- data.frame(
+  Amyl_grouped = c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year"),
+  Count = c(907, 151, 152, 103)
+)
+
+knitr::kable(amyl_usage, caption = "Distribution of amyl nitrite usage among respondents")
+
+```
 
 ```{r, echo=FALSE, results='hide'}
 # Check missing values
@@ -48,7 +72,7 @@ missing_values <- colSums(is.na(data))
 missing_values
 ```
 
-```{r}
+```{r, echo=FALSE,results='hide'}
 grouped_data <- data %>%
   mutate(Amyl_grouped = case_when(
     Amyl == "CL0" ~ "Never Used",
@@ -60,7 +84,7 @@ grouped_data <- data %>%
 str(grouped_data)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,results='hide'}
 # Set the levels of the factor
 grouped_data$Amyl_grouped <- factor(grouped_data$Amyl_grouped, 
                                      levels = c("Never Used", "Used Over a Decade Ago", 
@@ -70,7 +94,7 @@ grouped_data$Amyl_grouped <- factor(grouped_data$Amyl_grouped,
 table(grouped_data$Amyl_grouped)
 ```
 
-```{r}
+```{r,echo=FALSE,results='hide'}
 set.seed(12345)
 n <- nrow(grouped_data)
 idx1 <- sample(c(1:n), floor(0.70 * n))
@@ -81,13 +105,13 @@ validation_data <- grouped_data[idx2, ]
 testing_data <- grouped_data[idx3, ]
 ```
 
-```{r}
+```{r,echo=FALSE,results='hide'}
 str(training_data)
 str(validation_data)
 str(testing_data)
 ```
 
-```{r}
+```{r,echo=FALSE,results='hide'}
 grouped_counts <- training_data %>%
   dplyr::group_by(Amyl_grouped) %>%
   dplyr::summarise(Count = n())
@@ -258,7 +282,7 @@ grid.arrange(cscore,impulsive,ss,ncol=2)
 
 # Classification Methods
 
-## KNN
+## K-nearest Neighbours(KNN)
 
 ```{r}
 #install.packages('kknn')
@@ -321,7 +345,7 @@ test.pred <- knn(trainSet_scale, testSet_scale, trainSet[,16] ,k =k.opt)
 confusionMatrix(test.pred,as.factor(testSet[,16]))
 ```
 
-## SVM
+## Support Vector Machines(SVM)
 
 ```{r}
 # Load the e1071 package for SVM
@@ -490,7 +514,7 @@ print("Confusion Matrix for Sigmoid Kernel SVM:")
 print(conf_matrix_sigmoid)
 ```
 
-## \# LDA & QDA
+## Linear/Quadratic Discriminant Analysis
 
 ```{r}
 library(MASS)  # For lda and qda functions
@@ -690,7 +714,8 @@ str(training_data)
 str(validation_data)
 ```
 
-# Tree-based Method
+## Tree-based Method
+
 ```{r echo=FALSE}
 # subset the data set
 train_data<-subset(training_data,
@@ -800,3 +825,7 @@ print(best_model$balanced_accuracy)
 best_tree<- prune(full_tree,cp = best_model$best_cp)
 rpart.plot(best_tree,type=2,extra=4)
 ```
+
+# Model Comparison 
+
+# Conclusion 
