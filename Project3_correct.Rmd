@@ -1,18 +1,15 @@
 ---
-title: " Data Mining and Machine Learning project"
-output:
+itle: "Project3"
+ououtput:
   pdf_document:
-    toc: true
-  html_document:
-    toc: true
-    toc_float: true
-    code_folding: hide
-    number_sections: true
-    theme: cosmo
-    highlight: tango
-    fig_width: 7
-    fig_height: 5
-    echo: false
+    latex_engine: xelatex
+header-includes:
+- \usepackage{geometry}
+- \usepackage{setspace}
+- \geometry{left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm}
+- \setstretch{1.5}
+output: pdf_document
+fontsize: 12pt
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE,message=FALSE}
