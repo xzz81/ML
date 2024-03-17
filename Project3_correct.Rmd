@@ -556,7 +556,7 @@ neural_val<-subset(validation_data,select = -c(ID,Amyl,Semer))
 neural_test<-subset(testing_data,select = -c(ID,Amyl,Semer))
 ```
 
-```{r,echo=False, results='hide'}
+```{r,echo=FALSE, results='hide'}
 #since our dataset has some character variables which will influence the neural 
 #network model, we remove variable 'ID', 'Amyl' and 'Semer'
 #neural network model
