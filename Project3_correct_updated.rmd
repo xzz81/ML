@@ -269,11 +269,11 @@ ss<-ggplot(cross_table_df_ss, aes(x = drug_last_use_time, y = frequency, fill = 
   theme2
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures (Nscore, Escore, Oscore, Ascore).", fig.align="center"}
 grid.arrange(nscore,escore,oscore,ascore,ncol=2)
 ```
 
-```{r}
+```{r, echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures(Cscore, Impulsive, SS).", fig.align="center"}
 grid.arrange(cscore,impulsive,ss,ncol=2)
 ```
 
