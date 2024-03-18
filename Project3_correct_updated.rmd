@@ -341,6 +341,107 @@ test.pred <- knn(trainSet_scale, testSet_scale, trainSet[,16] ,k =k.opt)
 # created confusion matrix
 confusionMatrix(test.pred,as.factor(testSet[,16]))
 ```
+## Linear/Quadratic Discriminant Analysis
+
+```{r, echo=FALSE, results='hide'}
+# Prepare datasets for SVM method and also for LDA/QDA method
+svm_data<-subset(training_data,select = -c(ID,Amyl,Semer))
+svm_val<-subset(validation_data,select = -c(ID,Amyl,Semer))
+svm_test<-subset(testing_data,select = -c(ID,Amyl,Semer))
+```
+
+```{r, echo=FALSE, results='hide'}
+str(svm_data)
+str(svm_val)
+str(svm_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+library(MASS)  # For lda and qda functions
+```
+
+```{r}
+# Fit a Linear Discriminant Analysis (LDA) model
+lda_model <- lda(Amyl_grouped ~ ., data = svm_data)
+# Fit a Quadratic Discriminant Analysis (QDA) model
+qda_model <- qda(Amyl_grouped ~ ., data = svm_data)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Training, Validation and Testing predictions and accuracy with LDA
+lda_training_pred <- predict(lda_model, training_data)$class
+lda_training_acc <- mean(lda_training_pred == training_data$Amyl_grouped)
+cat("Actual Training Accuracy for LDA:", lda_training_acc, "\n")
+
+lda_val_pred <- predict(lda_model, svm_val)$class
+lda_val_acc <- mean(lda_val_pred == svm_val$Amyl_grouped)
+cat("Validation Accuracy for LDA:", lda_val_acc, "\n")
+
+lda_test_pred <- predict(lda_model, svm_test)$class
+lda_test_acc <- mean(lda_test_pred == svm_test$Amyl_grouped)
+cat("Test Accuracy for LDA:", lda_test_acc, "\n")
+
+# Training, Validation and Testing predictions and accuracy with QDA
+qda_training_pred <- predict(qda_model, training_data)$class
+qda_training_acc <- mean(qda_training_pred == training_data$Amyl_grouped)
+cat("Actual Training Accuracy for QDA:", qda_training_acc, "\n")
+
+qda_val_pred <- predict(qda_model, svm_val)$class
+qda_val_acc <- mean(qda_val_pred == svm_val$Amyl_grouped)
+cat("Validation Accuracy for QDA:", qda_val_acc, "\n")
+
+qda_test_pred <- predict(qda_model, svm_test)$class
+qda_test_acc <- mean(qda_test_pred == svm_test$Amyl_grouped)
+cat("Test Accuracy for QDA:", qda_test_acc, "\n")
+```
+
+```{r, echo=FALSE, fig.cap="Figure",fig.align="center"}
+library(knitr)
+library(kableExtra)
+
+# Accuracy values obtained for LDA and QDA models
+accuracy_data_lda_qda <- data.frame(
+  Model_Type = c("LDA", "QDA"),
+  Training_Accuracy = c(lda_training_acc, qda_training_acc),
+  Validation_Accuracy = c(lda_val_acc, qda_val_acc),
+  Testing_Accuracy = c(lda_test_acc, qda_test_acc)
+)
+
+knitr::kable(accuracy_data_lda_qda, caption = "Training, Validation, and Testing Accuracy for LDA and QDA Models")
+```
+
+From the accuracy tale for LDA and QDA models, the LDA model performs better than the QDA, even though the QDA model offers more flexible boundaries:
+- the LDA model gives consistent performance across training, validation, and test sets, while
+- in the QDA model, there is a significant drop from the tarining to validation and test sets in accuracy, underscoring potential overfitting and less robust predictive ability.
+
+However, the performance of balanced accuracy contrasts the outcome of accuracy analysis. Across all classes, QDA displays higher balanced accuracies compared to LDA.
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for LDA
+conf_matrix_lda <- confusionMatrix(as.factor(lda_test_pred), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for LDA:")
+print(conf_matrix_lda)
+
+# Confusion Matrix for QDA
+conf_matrix_qda <- confusionMatrix(as.factor(qda_test_pred), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for QDA:")
+print(conf_matrix_qda)
+```
+
+```{r, echo=FALSE, fig.cap="Figure",fig.align="center"}
+library(knitr)
+library(kableExtra)
+
+# Balanced accuracy values obtained for LDA and QDA models of each class
+balanced_accuracy_lda_qda <- data.frame(
+  Class = c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year to Day"),
+  LDA_Balanced_Accuracy = c(0.49409, 0.507399, 0.5000, 0.4944),
+  QDA_Balanced_Accuracy = c(0.6292, 0.5804, 0.60069, 0.50908)
+)
+
+knitr::kable(balanced_accuracy_lda_qda, caption = "Balanced Accuracy for Each Class for LDA and QDA Models")
+```
+Hence, the overall performance of the LDA and QDA models for drug consumption dataset do not perform well in generalization, as the relatively low balanced accuracy values from the confusion matrix across all classes, suggesting alternative classification methods should be considered.
 
 ## Support Vector Machines(SVM)
 
@@ -372,7 +473,6 @@ model_rbf <- svm(training_data$Amyl_grouped ~ ., data = svm_data,
 model_sigmoid <- svm(training_data$Amyl_grouped ~ ., data = 
                        svm_data, type = "C-classification", kernel = "sigmoid")
 ```
-
 
 ```{r, echo=FALSE, results='hide'}
 # Training, Validation and Testing predictions and accuracy 
@@ -515,89 +615,6 @@ balanced_accuracy_svm <- data.frame(
   Sigmoid = c(0.45701, 0.493619, 0.483270, 0.4832))
 
 knitr::kable(balanced_accuracy_svm, caption = "Balanced Accuracy for Each Class Across Different SVM Kernels")
-```
-
-
-## Linear/Quadratic Discriminant Analysis
-
-```{r, echo=FALSE, results='hide'}
-library(MASS)  # For lda and qda functions
-```
-
-```{r}
-# Fit a Linear Discriminant Analysis (LDA) model
-lda_model <- lda(Amyl_grouped ~ ., data = svm_data)
-# Fit a Quadratic Discriminant Analysis (QDA) model
-qda_model <- qda(Amyl_grouped ~ ., data = svm_data)
-```
-
-```{r, echo=FALSE, results='hide'}
-# Training, Validation and Testing predictions and accuracy with LDA
-lda_training_pred <- predict(lda_model, training_data)$class
-lda_training_acc <- mean(lda_training_pred == training_data$Amyl_grouped)
-cat("Actual Training Accuracy for LDA:", lda_training_acc, "\n")
-
-lda_val_pred <- predict(lda_model, svm_val)$class
-lda_val_acc <- mean(lda_val_pred == svm_val$Amyl_grouped)
-cat("Validation Accuracy for LDA:", lda_val_acc, "\n")
-
-lda_test_pred <- predict(lda_model, svm_test)$class
-lda_test_acc <- mean(lda_test_pred == svm_test$Amyl_grouped)
-cat("Test Accuracy for LDA:", lda_test_acc, "\n")
-
-# Training, Validation and Testing predictions and accuracy with QDA
-qda_training_pred <- predict(qda_model, training_data)$class
-qda_training_acc <- mean(qda_training_pred == training_data$Amyl_grouped)
-cat("Actual Training Accuracy for QDA:", qda_training_acc, "\n")
-
-qda_val_pred <- predict(qda_model, svm_val)$class
-qda_val_acc <- mean(qda_val_pred == svm_val$Amyl_grouped)
-cat("Validation Accuracy for QDA:", qda_val_acc, "\n")
-
-qda_test_pred <- predict(qda_model, svm_test)$class
-qda_test_acc <- mean(qda_test_pred == svm_test$Amyl_grouped)
-cat("Test Accuracy for QDA:", qda_test_acc, "\n")
-```
-
-```{r, echo=FALSE, fig.cap="Figure",fig.align="center"}
-library(knitr)
-library(kableExtra)
-
-# Accuracy values obtained for LDA and QDA models
-accuracy_data_lda_qda <- data.frame(
-  Model_Type = c("LDA", "QDA"),
-  Training_Accuracy = c(lda_training_acc, qda_training_acc),
-  Validation_Accuracy = c(lda_val_acc, qda_val_acc),
-  Testing_Accuracy = c(lda_test_acc, qda_test_acc)
-)
-
-knitr::kable(accuracy_data_lda_qda, caption = "Training, Validation, and Testing Accuracy for LDA and QDA Models")
-```
-
-```{r, echo=FALSE, results='hide'}
-# Confusion Matrix for LDA
-conf_matrix_lda <- confusionMatrix(as.factor(lda_test_pred), as.factor(testing_data$Amyl_grouped))
-print("Confusion Matrix for LDA:")
-print(conf_matrix_lda)
-
-# Confusion Matrix for QDA
-conf_matrix_qda <- confusionMatrix(as.factor(qda_test_pred), as.factor(testing_data$Amyl_grouped))
-print("Confusion Matrix for QDA:")
-print(conf_matrix_qda)
-```
-
-```{r, echo=FALSE, fig.cap="Figure",fig.align="center"}
-library(knitr)
-library(kableExtra)
-
-# Balanced accuracy values obtained for LDA and QDA models of each class
-balanced_accuracy_lda_qda <- data.frame(
-  Class = c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year to Day"),
-  LDA_Balanced_Accuracy = c(0.49409, 0.507399, 0.5000, 0.4944),
-  QDA_Balanced_Accuracy = c(0.6292, 0.5804, 0.60069, 0.50908)
-)
-
-knitr::kable(balanced_accuracy_lda_qda, caption = "Balanced Accuracy for Each Class for LDA and QDA Models")
 ```
 
 ## Nerual Network
