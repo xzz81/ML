@@ -820,7 +820,8 @@ best_model_class4 <- find_best_cp(full_tree = full_tree,
                            tolerance = 0.06) 
 ```
 
-```{r echo= FALSE}
+```
+{r echo= FALSE}
 #| label: fig-tree
 #| fig-cap: figure of the best tree under the defined classification
 # plot the best tree
