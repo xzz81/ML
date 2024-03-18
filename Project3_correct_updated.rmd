@@ -617,7 +617,11 @@ balanced_accuracy_svm <- data.frame(
 knitr::kable(balanced_accuracy_svm, caption = "Balanced Accuracy for Each Class Across Different SVM Kernels")
 ```
 
-## Nerual Network
+## Nerual Network(NNs)
+For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. 
+Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs, as shown in the figure below.
+
+
 
 ```{r}
 library(neuralnet)
