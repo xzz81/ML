@@ -773,13 +773,15 @@ find_best_cp <- function(full_tree, training_data, validation_data, testing_data
 set.seed(12345)
 full_tree <- rpart(Amyl_grouped~., data=train_data, method="class", control=rpart.control(minsplit=2,minbucket=round(20/3),maxdepth = 30, cp=-1))
 ```
+
 ```{r echo=FALSE}
 # construct full tree in training data set
 set.seed(12345)
 full_tree <- rpart(Amyl_grouped~., data=train_data, method="class", control=rpart.control(minsplit=2,minbucket=round(20/3),maxdepth = 30, cp=-1))
 printcp(full_tree)
 ```
-```{r echo=FALSE}
+
+```{r echo=FALSE, fig.width=5, fig.height=3}
 #| label: fig-treecomplex
 #| fig-cap: Decision tree complexity parameter line chart
 plotcp(full_tree)
@@ -797,17 +799,18 @@ best_model <- find_best_cp(full_tree = full_tree,
                            tolerance = 0.06) 
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width=8, fig.height=6}
 print(best_model$best_cp)
 ```
+
 ```{r echo= FALSE}
 #| label: fig-treebest
 #| fig-cap: figure of the best tree.
-
 # plot the best tree
 best_tree<- prune(full_tree,cp = best_model$best_cp)
 rpart.plot(best_tree,type=2,extra=4)
 ```
+
 ```{r echo=FALSE}
 # find best cp for the tree we build up 
 best_model_class4 <- find_best_cp(full_tree = full_tree, 
@@ -821,13 +824,14 @@ best_model_class4 <- find_best_cp(full_tree = full_tree,
 ```
 
 ```
-{r echo= FALSE}
+{r echo= FALSE, fig.width=10, fig.height=8}
 #| label: fig-tree
 #| fig-cap: figure of the best tree under the defined classification
 # plot the best tree
 best_tree_class4<- prune(full_tree,cp = best_model_class4$best_cp)
 rpart.plot(best_tree_class4,type=2,extra=4)
 ```
+
 ```
 {r echo=FALSE}
 #| label: tbl-tree
@@ -838,6 +842,7 @@ balanced_accuracy_tree<- data.frame(
 balanced_accuracy_tree_tbl<-gt(balanced_accuracy_tree)
 balanced_accuracy_tree_tbl
 ```
+
 ```{r echo=FALSE}
 mean_balanced_accuracy_tree<-mean(best_model_class4$balanced_accuracy)
 print(mean_balanced_accuracy_tree)
