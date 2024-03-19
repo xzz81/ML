@@ -454,7 +454,7 @@ Support Vector Machines (SVMs) is a maximum margin classification algorithm, han
 library(e1071)
 ```
 
-To apply support vector machines technique to predict the grouped categories of Amyl nitrite usage, various kernels (polynomial with degrees 3, radial basis function, and sigmoid respectively) are employed to train 5 distinct SVM models.
+To apply support vector machines technique to predict the grouped categories of Amyl nitrite usage, various kernels (polynomial with degrees 3, radial basis function, and sigmoid respectively) are employed to train 4 distinct SVM models.
 
 ```{r}
 # Train SVM model with different kernel
