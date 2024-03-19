@@ -343,6 +343,8 @@ confusionMatrix(test.pred,as.factor(testSet[,16]))
 ```
 ## Linear/Quadratic Discriminant Analysis
 
+The linear discriminant analysis (LDA) and quadratic discriminant analysis (QDA) are linear and non-linear Fisher's Discriminant Analysis method. LDA optimizing the direction of separation among classes by finding linear functions of explanatory data with assumption of identical covariance matrices regardless of category. QDA is employed when equal variances assumption is violated, and it uses quadratic boundary of the predictors to distinguish between categories.
+
 ```{r, echo=FALSE, results='hide'}
 # Prepare datasets for SVM method and also for LDA/QDA method
 svm_data<-subset(training_data,select = -c(ID,Amyl,Semer))
@@ -445,12 +447,14 @@ Hence, the overall performance of the LDA and QDA models for drug consumption da
 
 ## Support Vector Machines(SVM)
 
+Support Vector Machines (SVMs) is a maximum margin classification algorithm, handling both linear and nonliear data through kernelisation. Unlike LDA/QDA derive decision boundaries as the result of a probabilistic framework whereas SVM constructs decision boundaries by identifying the hyperplane that maximizes the margin between the support vectors of different classes.
+
 ```{r, echo=FALSE, results='hide'}
 # Load the e1071 package for SVM
 library(e1071)
 ```
 
-To apply support vector machines technique to predict the grouped categories of Amyl nitrite usag, various kernels (polynomial with degrees 3, radial basis function, and sigmoid respectively) are employed to train 5 distinct SVM models.
+To apply support vector machines technique to predict the grouped categories of Amyl nitrite usage, various kernels (polynomial with degrees 3, radial basis function, and sigmoid respectively) are employed to train 5 distinct SVM models.
 
 ```{r}
 # Train SVM model with different kernel
@@ -539,9 +543,13 @@ svm_accuracy <- data.frame(
 knitr::kable(svm_accuracy, caption = "Training, Validation, and Testing Accuracy for SVM Models")
 ```
 The output of the SVM models with various kernels demonstrates that:
+
 - The performance of the linear model appears to be consistent across training, validation and test datasets, indicating stable performance.
+
 - This Polynomial Kernel with Degree 3 model showed higher accuracy on the training dataset compared to the other kernels. However, some overfitting may be present due to a slight decrease in accuracy on the validation and test datasets.
+
 - The RBF kernel, similar to the linear kernel and polynomial kernel, shows consistent performance across datasets.
+
 - The sigmoid kernel shows lower accuracy than the other kernels across datasets, indicating that it may not be suitable for this classification project.
 
 Therefore, given the balance between accuracy, generalisation and model complexity, the RBF kernel offers outstanding adaptability and robustness across training, validation and testing data distributions. 
@@ -588,9 +596,9 @@ balanced_accuracy_svm <- data.frame(
 
 knitr::kable(balanced_accuracy_svm, caption = "Balanced Accuracy for Each Class Across Different SVM Kernels")
 ```
-This result may indicate that the drug consumtion by time does not exhibit strong linear or simple non-linear separability, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
+This result may indicate that the drug consumption by time does not exhibit strong linear or simple non-linear separability, model tuning should be considered for next step by hyperparameter optimization, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
 
-## Nerual Network(NNs)
+## Nerual Network (NNs)
 For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. 
 Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs, as shown in the figure below.
 
