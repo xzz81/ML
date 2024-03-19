@@ -124,7 +124,7 @@ grouped_counts
 training_data.copy <- training_data
 ```
 
-```{r, echo=FALSE, fig.cap="Distribution of Drug Use Categories (left) and Drug Consumption by Age (right).", fig.align="center"}
+```{r, echo=FALSE, fig.cap="Distribution of Drug Use Categories (left) and Drug Consumption by Age (right).", fig.align="center", fig.align="center", fig.width=6, fig.height=3}
 theme1 <- theme(
   axis.text.x = element_text(angle = 15, hjust = 1, size = 6),
   plot.title = element_text(size = 10),
@@ -149,7 +149,7 @@ g2 <-ggplot(training_data.copy, aes(x = Age_Category, fill = Amyl_grouped)) +
 grid.arrange(g1, g2, ncol = 2, widths = c(1, 1.75))
 ```
 
-```{r, echo=FALSE, fig.cap= "Drug Consumption by Gender (left) and Age (right).", fig.align="center"}
+```{r, echo=FALSE, fig.cap= "Drug Consumption by Gender (left) and Age (right).", fig.align="center", fig.align="center", fig.width=6, fig.height=3}
 g3 <- ggplot(training_data.copy, aes(x = as.factor(
   ifelse(Gender == 0.48246, "Female", "Male")), fill = Amyl_grouped)) + 
   geom_bar(color = "white", show.legend = FALSE) +
@@ -174,7 +174,7 @@ g4 <- ggplot(training_data.copy, aes(x = Edu_Category, fill = Amyl_grouped)) +
 grid.arrange(g3, g4, ncol = 2, widths = c(1, 1.75))
 ```
 
-```{r, echo=FALSE, fig.cap= "Country Distribution (left) and Ethnicity Distribution (right) Across Drug Consumption Categories.", fig.align="center"}
+```{r, echo=FALSE, fig.cap= "Country Distribution (left) and Ethnicity Distribution (right) Across Drug Consumption Categories.", fig.align="center", fig.align="center", fig.width=6, fig.height=3}
 training_data.copy$Country_Category <- cut(
   training_data.copy$Country,
   breaks = c(-Inf, -0.57009, -0.46841, -0.28519, -0.09765, 0.21128, 0.24923, Inf),
