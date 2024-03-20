@@ -662,16 +662,18 @@ conf_matrix_train_df <- as.data.frame(as.table(conf_matrix_train))
 ```
 
 ```{r,echo=FALSE}
+#| label: fig-confusion matrix 
+#| fig-cap: Confusion matrix for training data
 ggplot(data = conf_matrix_train_df, aes(x = Actual, y = Predicted, fill = Freq)) +
   geom_tile(color = "white") +
   geom_text(aes(label = Freq), vjust = 1) +  
   scale_fill_gradient(low = "white", high = "steelblue") +  
   theme_minimal() + 
   labs(title = "Confusion Matrix for Training Data", x = "Actual Class", 
-       y = "Predicted Class")  
+       y = "Predicted Class")
 ```
 
-The table output indicates that:
+The confusion matrix output indicates that:
 
 -   The values along the main diagonal of the confusion matrix (from the bottom left to the top right) represent the number of instances that were correctly classified. For the "Never Used" category, there are 867 instances that were correctly classified, which is the largest number on the diagonal, indicating that the model performs best on this category.
 
