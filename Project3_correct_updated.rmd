@@ -871,6 +871,8 @@ rpart.plot(best_tree,type=2,extra=4)
 # Model Comparison 
 
 ```{r,echo=FALSE}
+#| label:  Balanced accuracy
+#| tbl-cap: Model balanced accuracy
 library(knitr)
 library(kableExtra)
 amyl_usage <- data.frame(
