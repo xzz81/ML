@@ -678,7 +678,7 @@ The table output indicates that:
 
 However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
 #from plot, we can find that the model is very good at identifying the category
-```
+
 
 ```{r,echo=FALSE,results='hide'}
 #"Never Used".
