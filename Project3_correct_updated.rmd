@@ -869,6 +869,8 @@ rpart.plot(best_tree,type=2,extra=4)
 
 # Model Comparison 
 
+Because our response variables is multiclassified and the categories in our data are unbalanced, with the 'Never Used' category having the most data, we chose balanced accuracy for model comparisons. From the table below, we indicate that tree-based model is the most suitable model for this data, with 0.561 balanced accuracy.
+
 ```{r,echo=FALSE}
 #| label:  Balanced accuracy
 #| tbl-cap: Model balanced accuracy
