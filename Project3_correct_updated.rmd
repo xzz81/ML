@@ -664,13 +664,16 @@ conf_matrix_train_df <- as.data.frame(as.table(conf_matrix_train))
 ```{r,echo=FALSE}
 #| label: fig-confusion matrix 
 #| fig-cap: Confusion matrix for training data
-ggplot(data = conf_matrix_train_df, aes(x = Actual, y = Predicted, fill = Freq)) +
-  geom_tile(color = "white") +
-  geom_text(aes(label = Freq), vjust = 1) +  
-  scale_fill_gradient(low = "white", high = "steelblue") +  
-  theme_minimal() + 
-  labs(title = "Confusion Matrix for Training Data", x = "Actual Class", 
-       y = "Predicted Class")
+conf_matrix_plot <- matrix(c(14, 7, 48, 23,
+                        26, 52, 16, 7,
+                        0, 0, 0, 2,
+                        867, 92, 88, 71),
+                      nrow = 4, byrow = TRUE)
+
+colnames(conf_matrix_plot) <- c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year to Day")
+rownames(conf_matrix_plot) <- c("Used Over a Decade Ago", "Used in Last Year to Day", "Used in Last Decade", "Never Used")
+kable(conf_matrix_plot, caption = "Confusion Matrix for Training Data")
+
 ```
 
 The confusion matrix output indicates that:
