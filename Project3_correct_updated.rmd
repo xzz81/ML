@@ -679,7 +679,7 @@ The confusion matrix output indicates that:
 
 -   The off-diagonal values represent the number of instances that were misclassified. For instance, out of the actual "Used Over a Decade Ago" instances, 48 were incorrectly classified as "Used in Last Year to Decade". These types of errors are known as "false negatives" in machine learning.
 
--   There is a large concentration of instances in the "Never Used" category, suggesting a skewed distribution of the dataset towards this category. The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown.
+-   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category. The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown.
 
 However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
 
