@@ -749,12 +749,14 @@ balanced_accuracy_test <- mean(recall_per_class_test, na.rm = TRUE)
 print(balanced_accuracy_test)
 ```
 
-```{r}
-str(training_data)
-str(validation_data)
-```
+
 
 ## Tree-based Method
+
+```{r,echo=FALSE,results='hide'}
+str(training_data)
+str(validation_data)
+``` 
 
 ```{r echo=FALSE}
 # subset the data set
