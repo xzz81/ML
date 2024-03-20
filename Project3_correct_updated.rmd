@@ -599,12 +599,12 @@ knitr::kable(balanced_accuracy_svm, caption = "Balanced Accuracy for Each Class 
 This result may indicate that the drug consumption by time does not exhibit strong linear or simple non-linear separability, model tuning should be considered for next step by hyperparameter optimization, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
 
 ## Nerual Network (NNs)
-For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. 
-Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs, as shown in the figure below.
+For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs, as shown in the figure below.
 
+![Neural networks](images/neural%20image-01.gif)
+For constructing the neural network model, we use '**Amyl_grouped**' as the response variable and other variables as predicted variables. And with hidden layer1, 3or 5, we find model with 5 hidden layers has the highest accuracy. This model 
 
-
-```{r}
+```{r,echo=FALSE, results='hide'}
 library(neuralnet)
 library(nnet)
 #neural network
@@ -635,17 +635,6 @@ neural_model
 ```
 
 ```{r,echo=FALSE}
-#From this neural network model, we indicate that the final error of the model 
-#is 2.610247e+02, calculated as the sum of the differences between the model's 
-#predictions and the actual target values. Though this is a large error, it is 
-#relatively small compared to other neural network models. The model underwent 
-#3692 iterations 
-#before reaching the threshold condition.
-#For instance, the weight for Age.to.1layhid1 is 2.403544e+00, indicating a 
-#significant positive influence of age on the activation of the first neuron in 
-#the hidden layer. The weight for Impulsive.to.1layhid1 is -4.425419e-02, 
-#suggesting a minor and negative impact of impulsiveness on the same hidden 
-#neuron.
 #training data performance we calculate accuracy and balanced accuracy of the 
 #neural network model for training data
 training_expalin<-subset(neural_data,select = -Amyl_grouped)
@@ -677,6 +666,16 @@ ggplot(data = conf_matrix_train_df, aes(x = Actual, y = Predicted, fill = Freq))
   theme_minimal() + 
   labs(title = "Confusion Matrix for Training Data", x = "Actual Class", 
        y = "Predicted Class")  
+
+The table output indicates that:
+
+-   The values along the main diagonal of the confusion matrix (from the bottom left to the top right) represent the number of instances that were correctly classified. For the "Never Used" category, there are 867 instances that were correctly classified, which is the largest number on the diagonal, indicating that the model performs best on this category.
+
+-   The off-diagonal values represent the number of instances that were misclassified. For instance, out of the actual "Used Over a Decade Ago" instances, 48 were incorrectly classified as "Used in Last Year to Decade". These types of errors are known as "false negatives" in machine learning.
+
+-   There is a large concentration of instances in the "Never Used" category, suggesting a skewed distribution of the dataset towards this category. The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown.
+
+However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
 #from plot, we can find that the model is very good at identifying the category
 ```
 
