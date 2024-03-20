@@ -51,7 +51,7 @@ This report is structured as follows: The first section sets out the context of 
 
 Based on the dataset, we found that most respondents believe they belong to Group 'CL0' . Therefore, we conducted our analysis based on the data from the 'Semer' that only included Group 'CL0'. Additionally, based on the general distribution across the various groups for 'Amyl', we have divided the seven groups into four categories, as follows: 'Never Used' : CL0, 'Used Over a Decade Ago' : CL1, 'Used in Last Decade' : CL2, 'Used in Last Year to Day' : (CL3, CL4, CL5, CL6). Finally, to facilitate the creation of classification models, we have factorized these groups.
 
-```{r echo=FALSE, fig.cap="Figure 1",warning=FALSE,message=FALSE}
+```{r echo=FALSE, tbl.cap="Figure 1",warning=FALSE,message=FALSE}
 library(knitr)
 library(kableExtra)
 amyl_usage <- data.frame(
