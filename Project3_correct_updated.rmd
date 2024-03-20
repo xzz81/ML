@@ -862,12 +862,23 @@ print(best_model$best_accuracy)
 print(best_model$balanced_accuracy)
 ```
 
-```{r echo= FALSE}
+```{r,echo= FALSE}
 # plot the best tree
 best_tree<- prune(full_tree,cp = best_model$best_cp)
 rpart.plot(best_tree,type=2,extra=4)
 ```
 
 # Model Comparison 
+
+```{r,echo=FALSE}
+library(knitr)
+library(kableExtra)
+amyl_usage <- data.frame(
+  model = c("K-nearest Neighbours", "Linear Discriminant Analysis", "Support Vector Machines", "Nerual Network", 'Tree-based'),
+  Count = c(0.532, 0.494, 0.5, 0.347, 0.561)
+)
+knitr::kable(amyl_usage, caption = "Model Comparison")
+```
+
 
 # Conclusion 
