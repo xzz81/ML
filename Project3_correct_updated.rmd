@@ -43,9 +43,9 @@ data <- group_23[group_23$Semer == 'CL0',]
 
 In recent years, more and more drugs have begun to spread across various age groups. The intersection of personality psychology and substance use has garnered significant interest within the scientific community. This report collects 1885 respondents with 12 attributes, including education level, age, gender, country of residence, and ethnicity, providing a holistic view of each respondent NEO-FFI-R, encompassing five major dimensions of human personality (Neuroticism, Extraversion, Openness to Experience, Agreeableness, and Conscientiousness), alongside BIS-11 and ImpSSscales that measure impulsivity and sensation seeking.
 
-The primary aim of this report is to unravel the intricate relationships between personality traits, demographic factors, and drug consumption patterns.
+The main aim of this report is to find the relationships between personality traits, demographic factors, and drug consumption patterns.
 
-This report is structured as follows: The first section provides a comprehensivereview of the relevant literature, establishing a theoretical foundation for the subsequent analysis. The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks. The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
+This report is structured as follows: The first section sets out the context of the study and cleaning the data. The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks. The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
 
 # Data Processing
 
