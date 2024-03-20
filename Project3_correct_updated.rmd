@@ -602,7 +602,7 @@ This result may indicate that the drug consumption by time does not exhibit stro
 For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs.
 
 
-For constructing the neural network model, we use '**Amyl_grouped**' as the response variable and other variables as predicted variables. And with hidden layer1, 2, 3, 4 or 5, we find model with 2 hidden layers has the highest accuracy. This model's balanced accuracy for training data and validation data are 0.69 and 0.70, showing that there is no overfitting in neural model. Finally, the balanced accuracy for test data is 0.58 and combined with confusion matrix, we can figure some summary.
+For constructing the neural network model, we use '**Amyl_grouped**' as the response variable and other variables as predicted variables. And with hidden layer1, 2, 3, 4 or 5, we find model 5 hidden layers has appropriate explain even though model with 2 layers has the highest accuracy. Since model with 2 hidden layers have failed to learn enough information during training to make effective predictions about the class. This model's balanced accuracy for training data and validation data are 0.69 and 0.70, showing that there is no overfitting in neural model. Finally, the balanced accuracy for test data is 0.58 and combined with confusion matrix, we can figure some summary.
 
 ```{r,echo=FALSE, results='hide'}
 library(neuralnet)
@@ -623,7 +623,7 @@ neural_test<-subset(testing_data,select = -c(ID,Amyl,Semer))
 set.seed(1)
 #For construct the neural network model, we use 'Amyl_grouped' as the response 
 #variable and other variables as predicted variables. And with hidden layer1, 3
-#or 5, we find model with 5 hidden layers has the highest accuracy. Since our
+#or 5, we find model with 5 hidden layers has appropriate explain even though model with 2 layers has the highest accuracy. Since our
 #task is to classify, we set non-linear output. We set threshold = 0.01, which 
 #specifies the convergence criteria during model training. This means that when 
 #the total error improvement of the model is less than 0.01, the training 
