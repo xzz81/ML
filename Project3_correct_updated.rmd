@@ -659,6 +659,9 @@ balanced_accuracy_train <- mean(recall_per_class_train)
 print(balanced_accuracy_train)
 #confusion matrix plot
 conf_matrix_train_df <- as.data.frame(as.table(conf_matrix_train))
+```
+
+```{r,echo=FALSE}
 ggplot(data = conf_matrix_train_df, aes(x = Actual, y = Predicted, fill = Freq)) +
   geom_tile(color = "white") +
   geom_text(aes(label = Freq), vjust = 1) +  
