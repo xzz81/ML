@@ -599,9 +599,9 @@ knitr::kable(balanced_accuracy_svm, caption = "Balanced Accuracy for Each Class 
 This result may indicate that the drug consumption by time does not exhibit strong linear or simple non-linear separability, model tuning should be considered for next step by hyperparameter optimization, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
 
 ## Nerual Network (NNs)
-For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs, as shown in the figure below.
+For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well. Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output. The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs.
 
-![Neural networks](images/neural%20image-01.gif)
+
 For constructing the neural network model, we use '**Amyl_grouped**' as the response variable and other variables as predicted variables. And with hidden layer1, 3or 5, we find model with 5 hidden layers has the highest accuracy. This model 
 
 ```{r,echo=FALSE, results='hide'}
@@ -666,6 +666,7 @@ ggplot(data = conf_matrix_train_df, aes(x = Actual, y = Predicted, fill = Freq))
   theme_minimal() + 
   labs(title = "Confusion Matrix for Training Data", x = "Actual Class", 
        y = "Predicted Class")  
+```
 
 The table output indicates that:
 
