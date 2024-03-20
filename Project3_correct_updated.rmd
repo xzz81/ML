@@ -661,7 +661,7 @@ print(balanced_accuracy_train)
 conf_matrix_train_df <- as.data.frame(as.table(conf_matrix_train))
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,fig.align="center"}
 #| label: fig-confusion matrix 
 #| fig-cap: Confusion matrix for training data
 conf_matrix_plot <- matrix(c(14, 7, 48, 23,
