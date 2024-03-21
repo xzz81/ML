@@ -713,9 +713,6 @@ Neural networks are inspired by the architecture of biological neural systems, w
 Each neuron receives one or more inputs, processes those inputs, and produces an output.
 The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs.
 
-For constructing the neural network model, we use 'Amyl_grouped' as the response variable and other variables as predicted variables.
-And with hidden layer1, 2, 3, 4 or 5, we find model 5 hidden layers has appropriate explain even though model with 2 layers has the highest accuracy.
-Since model with 2 hidden layers have failed to learn enough information during training to make effective predictions about the class.
 This model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting in neural model.
 Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can figure some summary.
 
@@ -800,11 +797,8 @@ The confusion matrix output indicates that:
     For instance, out of the actual "Used Over a Decade Ago" instances, 48 were incorrectly classified as "Used in Last Year to Decade".
     These types of errors are known as "false negatives" in machine learning.
 
--   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category.
-    The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown.
-
-However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'.
-In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
+-   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category. 
+    The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown. However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
 
 ```{r,echo=FALSE,results='hide'}
 #"Never Used".
