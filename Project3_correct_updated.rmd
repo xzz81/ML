@@ -294,8 +294,13 @@ grid.arrange(cscore,impulsive,ss,ncol=2)
 ```
 
 # Classification Methods
-
-## K-nearest Neighbours(KNN)
+The K-Nearest Neighbors (KNN)
+KNN algorithm is a simple, non-parametric method used for classification and regression by analyzing the K closest labelled data points to predict the label of a new point.
+KNN is good at classifying binary response data, but to the categorical data it won't work effectively
+K is the important parameter in KNN, it will decide how many closest points will be used to determine the class of the new point. We should find a suitable value to fit the model, the too-small or too-large K will lead to overfit.
+And the distance function is also important in the high demotion conditions, different distance function will lead to different outcomes, but in this project, we just use the Euclidean distance.
+We will use for iteration to find best parameter in this project, and the criterion is the accuracy (not the balanced accuracy ). For this data set, we will iterate k from 1 to 30 ,and find the best k with the highest value. 
+But when we get the best K, we will use confusion matrix to see its balanced accuracy, and compare it with other models. KNN isn't the best machine-learning algorithm for this categorical indeed, but to other binary classification questions, it will have the good effect
 
 ```{r}
 #install.packages('kknn')
@@ -326,7 +331,7 @@ testSet <- tempSet[-validIndex, ]
 ```
 
 ```{r}
-# deleate useless varibales
+# deleate unrelative varibales
 trainSet_scale <- trainSet[, !(colnames(trainSet) %in% c("ID", "Semer" ,'Amyl' ,'Amyl_grouped'))]
 
 validSet_scale<- validSet[, !(colnames(validSet) %in% c("ID", "Semer" ,'Amyl' ,'Amyl_grouped'))]
