@@ -667,9 +667,7 @@ The summary table of balanced accuracy scores for the SVM models with various ke
 - The sigmoid kernel shows lower balanced accuracy trends than the other kernels across datasets, indicating that it may not be suitable for this classification project.
 
 Therefore, given the balance between accuracy, generalisation and model complexity, the RBF kernel offers slightly outstanding adaptability and robustness across training, validation and testing data distributions. 
-
 However, none of the kernels is performing strong performance, with the balanced accuracy values around 0.5 across all classes with all kernels as summarised.
-
 This result may indicate that the drug consumption by time does not exhibit strong linear or simple non-linear separability, model tuning should be considered for next step by hyperparameter optimization, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
 
 ## Nerual Network (NNs)
