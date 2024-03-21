@@ -54,29 +54,13 @@ This report is structured as follows: The first section sets out the context of 
 The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks.
 The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
 
-# Explanatory data analysis
 
-Firstly, we checked the structure of the data and found that it's a good multi-categorical dataset without any missing values.
-Both the response variable and explanatory variables are categorical.
-It is clear that we can't use normal techniques applied to continuous variables.
 
 # Grouping Data by Amyl Categories
 
 We grouped the data into 4 categories based on the last time the drug was used.
 Then, we set up the training data, test data, and validation data, with proportions of 0.7, 0.15, and 0.15, respectively.
 
-# Visualization
-
-We plotted a bar chart of the number of drug users against different Drug Usage Categories and ages.
-The 'never used' group constitutes the majority of drug users, and the number of drug users declines with increasing age.
-
-We also explored the differences in drug use between genders and different education levels.
-Regarding gender, the 'males used in last year to day' group is larger than females, while in other groups, the structures are similar.
-From the bar chart, we find that most of the data is collected from Western countries and white people.
-
-We also used bar plots to explore the relationships between different mental scores and the last time drugs were used.
-It's clear that the bar charts of nscore, escore, oscore, cscore, and ascore have similar structures, with normal distributions across different drug usage times.
-This indicates that these scores do not influence drug usage.
 
 However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
 
@@ -155,6 +139,11 @@ grouped_counts
 
 # Explanatory Data Analysis
 
+Firstly, we checked the structure of the data and found that it's a good multi-categorical dataset without any missing values.
+Both the response variable and explanatory variables are categorical.
+It is clear that we can't use normal techniques applied to continuous variables.
+To effectively analyze and model the relationships between the response variable and explanatory variables, we need to aalysis the clear distribution of the different varibales. 
+And using bar charts also be the good method.
 ```{r, echo=FALSE, results='hide'}
 # Make a copy of the DataFrame
 training_data.copy <- training_data
@@ -183,6 +172,9 @@ g2 <-ggplot(training_data.copy, aes(x = Age_Category, fill = Amyl_grouped)) +
   theme1
 
 grid.arrange(g1, g2, ncol = 2, widths = c(1, 1.75))
+
+We plotted a bar chart of the number of drug users against different Drug Usage Categories and ages.
+The 'never used' group constitutes the majority of drug users, and the number of drug users declines with increasing age.
 ```
 
 ```{r, echo=FALSE, fig.cap= "Drug Consumption by Gender (left) and Age (right).", fig.align="center", fig.align="center", fig.width=6, fig.height=3}
@@ -233,7 +225,10 @@ g6 <- ggplot(training_data.copy, aes(x = Ethnicity_Category, fill = Amyl_grouped
   theme1
   
 grid.arrange(g5, g6, ncol = 2, widths = c(1, 1.75))
+
+
 ```
+From the Country and Ethnicity graphs, the source of the data is evident. The majority of the data is collected from individuals who are white or of mixed white ancestry, and reside in countries with a significant white population.
 
 ```{r, echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures.", fig.align="center"}
 theme2 <- theme(legend.position="none",
@@ -305,13 +300,22 @@ ss<-ggplot(cross_table_df_ss, aes(x = drug_last_use_time, y = frequency, fill = 
   theme2
 ```
 
+
+
+
+
 ```{r echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures (Nscore, Escore, Oscore, Ascore).", fig.align="center",fig.width=8, fig.height=4}
 grid.arrange(nscore,escore,oscore,ascore,ncol=2)
+
 ```
+
+We also used bar plots to explore the relationships between different mental scores and the last time drugs were used. It's clear that the bar charts of nscore, escore, oscore, cscore, and ascore have similar structures, with normal distributions across different drug usage times. This indicates that these scores do not influence drug usage.
 
 ```{r, echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures(Cscore, Impulsive, SS).", fig.align="center",fig.width=8, fig.height=4}
 grid.arrange(cscore,impulsive,ss,ncol=2)
 ```
+
+However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
 
 # Classification Methods
 
