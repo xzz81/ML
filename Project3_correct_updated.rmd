@@ -47,6 +47,22 @@ The main aim of this report is to find the relationships between personality tra
 
 This report is structured as follows: The first section sets out the context of the study and cleaning the data. The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks. The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
 
+
+# Explanatory data analysis 
+Firstly, we checked the structure of the data and found that it's a good multi-categorical dataset without any missing values. Both the response variable and explanatory variables are categorical. It is clear that we can't use normal techniques applied to continuous variables.
+
+# Grouping Data by Amyl Categories
+We grouped the data into 4 categories based on the last time the drug was used. Then, we set up the training data, test data, and validation data, with proportions of 0.7, 0.15, and 0.15, respectively.
+
+# Visualization 
+We plotted a bar chart of the number of drug users against different Drug Usage Categories and ages. The 'never used' group constitutes the majority of drug users, and the number of drug users declines with increasing age.
+
+We also explored the differences in drug use between genders and different education levels. Regarding gender, the 'males used in last year to day' group is larger than females, while in other groups, the structures are similar. From the bar chart, we find that most of the data is collected from Western countries and white people.
+
+We also used bar plots to explore the relationships between different mental scores and the last time drugs were used. It's clear that the bar charts of nscore, escore, oscore, cscore, and ascore have similar structures, with normal distributions across different drug usage times. This indicates that these scores do not influence drug usage.
+
+However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
+
 # Data Processing
 
 Based on the dataset, we found that most respondents believe they belong to Group 'CL0' . Therefore, we conducted our analysis based on the data from the 'Semer' that only included Group 'CL0'. Additionally, based on the general distribution across the various groups for 'Amyl', we have divided the seven groups into four categories, as follows: 'Never Used' : CL0, 'Used Over a Decade Ago' : CL1, 'Used in Last Decade' : CL2, 'Used in Last Year to Day' : (CL3, CL4, CL5, CL6). Finally, to facilitate the creation of classification models, we have factorized these groups.
