@@ -703,9 +703,9 @@ This result may indicate that the drug consumption by time does not exhibit stro
 
 For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well.
 Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output.
-The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs.
+The main components of neural network information processing include inputs, weights, summation functions.
 
-This model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting in neural model. Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can figure some summary.
+With 5 hidden layers, the neural model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting. Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can gain some summary.
 
 ```{r,echo=FALSE, results='hide'}
 library(neuralnet)
