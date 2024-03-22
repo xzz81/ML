@@ -1,0 +1,1055 @@
+---
+itle: "Project3"
+ououtput:
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+- \usepackage{geometry}
+- \usepackage{setspace}
+- \geometry{left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm}
+- \setstretch{1.5}
+output: pdf_document
+fontsize: 12pt
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE,message=FALSE}
+# Load necessary library
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(skimr)
+library(gmodels)
+library(GGally)
+library(MLmetrics)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(class)
+library(MASS)
+library(neuralnet)
+library(nnet)
+library(knitr)
+
+```
+
+```{r, echo=FALSE, results='hide'}
+# Load the data for drug consumption
+group_23 <- read.csv('group_23.csv')
+# Get rid of the fiction data
+data <- group_23[group_23$Semer == 'CL0',]
+```
+
+# Introduction
+
+In recent years, more and more drugs have begun to spread across various age groups.
+The intersection of personality psychology and substance use has garnered significant interest within the scientific community.
+This report collects 1885 respondents with 12 attributes, including education level, age, gender, country of residence, and ethnicity, providing a holistic view of each respondent NEO-FFI-R, encompassing five major dimensions of human personality (Neuroticism, Extraversion, Openness to Experience, Agreeableness, and Conscientiousness), alongside BIS-11 and ImpSSscales that measure impulsivity and sensation seeking.
+
+The main aim of this report is to find the relationships between personality traits, demographic factors, and drug consumption patterns.
+
+# Grouping Data by Amyl Categories
+
+We grouped the data into 4 categories based on the last time the drug was used.
+Then, we set up the training data, test data, and validation data, with proportions of 0.7, 0.15, and 0.15, respectively.
+
+However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
+
+Based on the dataset, we found that most respondents believe they belong to Group 'CL0' .
+Therefore, we conducted our analysis based on the data from the 'Semer' that only included Group 'CL0'.
+Additionally, based on the general distribution across the various groups for 'Amyl', we have divided the seven groups into four categories, as follows: 'Never Used' : CL0, 'Used Over a Decade Ago' : CL1, 'Used in Last Decade' : CL2, 'Used in Last Year to Day' : (CL3, CL4, CL5, CL6).
+Finally, to facilitate the creation of classification models, we have factorized these groups.
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+library(knitr)
+library(kableExtra)
+amyl_usage <- data.frame(
+  Amyl_grouped = c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year"),
+  Count = c(907, 151, 152, 103)
+)
+
+knitr::kable(amyl_usage, caption = "Distribution of amyl nitrite usage among respondents")
+```
+
+```{r, echo=FALSE, results='hide'}
+# Check missing values
+missing_values <- colSums(is.na(data))
+missing_values
+```
+
+```{r, echo=FALSE,results='hide'}
+grouped_data <- data %>%
+  mutate(Amyl_grouped = case_when(
+    Amyl == "CL0" ~ "Never Used",
+    Amyl == "CL1" ~ "Used Over a Decade Ago",
+    Amyl == "CL2" ~ "Used in Last Decade",
+    Amyl %in% c("CL3", "CL4", "CL5", "CL6") ~ "Used in Last Year to Day"
+  ))
+
+str(grouped_data)
+```
+
+```{r, echo=FALSE,results='hide'}
+# Set the levels of the factor
+grouped_data$Amyl_grouped <- factor(grouped_data$Amyl_grouped, 
+                                     levels = c("Never Used", "Used Over a Decade Ago", 
+                                                "Used in Last Decade", "Used in Last Year to Day"))
+
+# Distribution of the 'Amyl_grouped' categories
+table(grouped_data$Amyl_grouped)
+```
+
+```{r,echo=FALSE,results='hide'}
+set.seed(12345)
+n <- nrow(grouped_data)
+idx1 <- sample(c(1:n), floor(0.70 * n))
+idx2 <- sample(c(1:n)[-idx1], floor(0.15 * n))
+idx3 <- setdiff(c(1:n), c(idx1, idx2))
+training_data <- grouped_data[idx1, ]
+validation_data <- grouped_data[idx2, ]
+testing_data <- grouped_data[idx3, ]
+```
+
+```{r,echo=FALSE,results='hide'}
+str(training_data)
+str(validation_data)
+str(testing_data)
+```
+
+```{r,echo=FALSE,results='hide'}
+grouped_counts <- training_data %>%
+  dplyr::group_by(Amyl_grouped) %>%
+  dplyr::summarise(Count = n())
+
+
+grouped_counts
+```
+
+# Explanatory Data Analysis
+
+  We checked the structure of the data and found that it's a good multi-categorical dataset without any missing values.And both the response variable and explanatory variables are categorical.
+  We can't use normal techniques applied to continuous variables.
+To effectively analyze and model the relationships between the response variable and explanatory variables, we need to aalysis the clear distribution of the different varibales.
+And using bar charts also be the good method.
+
+```{r, echo=FALSE, results='hide'}
+# Make a copy of the DataFrame
+training_data.copy <- training_data
+```
+
+```{r, echo=FALSE, fig.cap="Distribution of Drug Use Categories (left) and Drug Consumption by Age (right).", fig.align="center", fig.align="center", fig.width=6, fig.height=2}
+theme1 <- theme(
+  axis.text.x = element_text(angle = 15, hjust = 1, size = 6),
+  plot.title = element_text(size = 10),
+  axis.text.y = element_text(size = 8)
+)
+# Bar plot for the updated 'Amyl_grouped' categories
+g1 <- ggplot(training_data.copy, aes(x = Amyl_grouped)) + 
+  geom_bar() + theme1
+
+
+training_data.copy$Age_Category <- cut(
+  training_data.copy$Age,
+  breaks = c(-Inf, -0.95197, -0.07854, 0.49788, 1.09449, 1.82213, Inf),
+  labels = c("18-24", "25-34", "35-44", "45-54", "55-64", "65+")
+  )
+
+g2 <-ggplot(training_data.copy, aes(x = Age_Category, fill = Amyl_grouped)) + 
+  geom_bar(color = "white") +
+  labs(x = "Age Group", y = "Count") + 
+  theme1
+
+grid.arrange(g1, g2, ncol = 2, widths = c(1, 2.5))
+```
+
+  To number of drug users against different Drug Usage Categories and ages graphs,the 'never used' group constitutes the majority of drug users, and the number of drug users declines with increasing age.
+
+![Drug Consumption by Country Entity Gender Edu](images/Screenshot 2024-03-22 at 09.55.58.png){width="607"}
+
+```{r, echo=FALSE, fig.cap= "Drug Consumption by Gender (left) and Edu (right).", fig.align="center", fig.align="center", fig.width=6, fig.height=2,include=FALSE}
+g3 <- ggplot(training_data.copy, aes(x = as.factor(
+  ifelse(Gender == 0.48246, "Female", "Male")), fill = Amyl_grouped)) + 
+  geom_bar(color = "white", show.legend = FALSE) +
+  labs(x = "Gender", y = "Count") + 
+  theme1
+
+training_data.copy$Edu_Category <- cut(
+  training_data.copy$Education,
+  breaks = c(-Inf, -2.43591, -1.73790, -1.43719, -1.22751, 
+             -0.61113, -0.05921, 0.45468, 1.16365, Inf),
+  labels = c("Left school before 16 years", "Left school at 16 years", 
+             "Left school at 17 years", "Left school at 18 years", 
+             "Some college or university, no certificate or degree",
+             "Professional certificate/ diploma", 
+             "University degree", "Masters degree", "Doctorate degree")
+  )
+
+g4 <- ggplot(training_data.copy, aes(x = Edu_Category, fill = Amyl_grouped)) + 
+  geom_bar(colour = "white") +
+  theme1
+
+grid.arrange(g3, g4, ncol = 2, widths = c(1, 2))
+```
+
+```{r, echo=FALSE, fig.cap= "Country Distribution (left) and Ethnicity Distribution (right) Across Drug Consumption Categories.", fig.align="center", fig.align="center", fig.width=6, fig.height=2,include=FALSE}
+training_data.copy$Country_Category <- cut(
+  training_data.copy$Country,
+  breaks = c(-Inf, -0.57009, -0.46841, -0.28519, -0.09765, 0.21128, 0.24923, Inf),
+  labels = c("USA", "New Zealand", "Other", "Australia", "Republic of Ireland", "Canada","UK")
+  ) 
+
+g5 <- ggplot(training_data.copy, aes(x = Country_Category, fill = Amyl_grouped)) + 
+  geom_bar(colour = "white", show.legend = FALSE) +
+  theme1
+
+training_data.copy$Ethnicity_Category <- cut(
+  training_data.copy$Ethnicity,
+  breaks = c(-Inf, -1.10702, -0.50212, -0.31685, -0.22166, 0.11440, 0.12600, Inf),
+  labels = c("Black", "Mixed-White/Black", "White", "Asian", 
+             "Mixed-White/Asian", "Other", "Mixed-Black/Asian" )
+  )
+
+g6 <- ggplot(training_data.copy, aes(x = Ethnicity_Category, fill = Amyl_grouped)) + 
+  geom_bar(colour = "white") +
+  theme1
+  
+grid.arrange(g5, g6, ncol = 2, widths = c(1, 2.25))
+
+
+```
+
+From the Country and Ethnicity graphs, the source of the data is evident.
+The majority of the data is collected from individuals who are white or of mixed white ancestry, and reside in countries with a significant white population.
+
+```{r, echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures.", fig.align="center"}
+theme2 <- theme(legend.position="none",
+  axis.text.x = element_text(angle = 15, hjust = 1, size = 6),
+  plot.title = element_text(size = 10),
+  axis.text.y = element_text(size = 8))
+  
+cross_table_nscore <- table(training_data$Amyl_grouped, training_data$Nscore)
+cross_table_df_nscore <- as.data.frame(cross_table_nscore)
+names(cross_table_df_nscore) <- c("drug_last_use_time", "nscore", "frequency")
+nscore<-ggplot(cross_table_df_nscore, aes(x = drug_last_use_time, y = frequency, fill = nscore)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Nscore",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_escore <- table(training_data$Amyl_grouped, training_data$Escore)
+cross_table_df_escore <- as.data.frame(cross_table_escore)
+names(cross_table_df_escore) <- c("drug_last_use_time", "escore", "frequency")
+escore<-ggplot(cross_table_df_escore, aes(x = drug_last_use_time, y = frequency, fill = escore )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Escore",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_oscore <- table(training_data$Amyl_grouped, training_data$Oscore)
+cross_table_df_oscore <- as.data.frame(cross_table_oscore)
+names(cross_table_df_oscore) <- c("drug_last_use_time", "oscore", "frequency")
+oscore<-ggplot(cross_table_df_oscore, aes(x = drug_last_use_time, y = frequency, fill = oscore )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Oscore",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_ascore <- table(training_data$Amyl_grouped, training_data$Ascore)
+cross_table_df_ascore <- as.data.frame(cross_table_ascore)
+names(cross_table_df_ascore) <- c("drug_last_use_time", "ascore", "frequency")
+ascore<-ggplot(cross_table_df_ascore, aes(x = drug_last_use_time, y = frequency, fill = ascore )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Ascore",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_cscore <- table(training_data$Amyl_grouped, training_data$Cscore)
+cross_table_df_cscore <- as.data.frame(cross_table_cscore)
+names(cross_table_df_cscore) <- c("drug_last_use_time", "cscore", "frequency")
+cscore<-ggplot(cross_table_df_cscore, aes(x = drug_last_use_time, y = frequency, fill = cscore )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Cscore",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_impulsive <- table(training_data$Amyl_grouped, training_data$Impulsive)
+cross_table_df_impulsive <- as.data.frame(cross_table_impulsive)
+names(cross_table_df_impulsive) <- c("drug_last_use_time", "impulsive", "frequency")
+impulsive<-ggplot(cross_table_df_impulsive, aes(x = drug_last_use_time, y = frequency, fill = impulsive  )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs Impulsive",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+
+cross_table_ss <- table(training_data$Amyl_grouped, training_data$SS)
+cross_table_df_ss <- as.data.frame(cross_table_ss)
+names(cross_table_df_ss) <- c("drug_last_use_time", "ss", "frequency")
+ss<-ggplot(cross_table_df_ss, aes(x = drug_last_use_time, y = frequency, fill = ss )) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Drug last use time vs SS",
+       x = "Drug last use time", y = "Frequency") +
+  theme2
+```
+
+```{r echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures (Nscore, Escore, Oscore, Ascore).", fig.align="center",fig.width=6, fig.height=4}
+grid.arrange(nscore,escore,oscore,ascore,ncol=2)
+
+```
+
+We also used bar plots to explore the relationships between different mental scores and the last time drugs were used.
+It's clear that the bar charts of nscore, escore, oscore, cscore, and ascore have similar structures, with normal distributions across different drug usage times,which indicates these scores won't influence drug usage.
+
+```{r, echo=FALSE, fig.cap= "Drug last used time v.s. Personality Measures(Cscore, Impulsive, SS).", fig.align="center",fig.width=6, fig.height=4}
+grid.arrange(cscore,impulsive,ss,ncol=2)
+```
+
+However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
+
+# Classification Methods
+
+## The K-Nearest Neighbors (KNN)
+
+  KNN algorithm is a simple, non-parametric method used for classification and regression by analyzing the K closest labelled data points to predict the label of a new point.
+  K is the important parameter in KNN, it decide how many closest points will be used to determine the class of the new point.,We should find a suitable value to fit the model.
+  In this project, we use the Euclidean distance, "for" iteration to find best parameter in this project, and the criterion is the balanced_accuracy
+  For this data set, we will iterate k from 1 to 30 ,and find the best k with the highest value.When we get the best K, we will use confusion matrix to see its balanced accuracy, and compare it with other models.
+  KNN isn't the best machine-learning algorithm for this categorical indeed, but to other binary classification questions, it will have the good effect
+
+```{r, echo=FALSE}
+# Create an index for the training set based on ID
+trainIndex <- createDataPartition(grouped_data$ID, p = .70, list = FALSE, times = 1)
+
+# Create training set
+trainSet <- grouped_data[trainIndex, ]
+
+# Create a temporary dataset without the training data
+tempSet <-  grouped_data[-trainIndex, ]
+
+#split the remaining data into validation and test sets based on ID
+validIndex <- createDataPartition(tempSet$ID, p = .50, list = FALSE, times = 1)
+
+# Create validation and test sets
+validSet <- tempSet[validIndex, ]
+testSet <- tempSet[-validIndex, ]
+```
+
+```{r, echo=FALSE}
+# deleate unrelative varibales
+trainSet_scale <- trainSet[, !(colnames(trainSet) %in% c("ID", "Semer" ,'Amyl' ,'Amyl_grouped'))]
+
+validSet_scale<- validSet[, !(colnames(validSet) %in% c("ID", "Semer" ,'Amyl' ,'Amyl_grouped'))]
+
+testSet_scale<- testSet[, !(colnames(validSet) %in% c("ID", "Semer" ,'Amyl' ,'Amyl_grouped'))]
+```
+
+```{r, echo=FALSE, message=FALSE,fig.width=6, fig.height=3}
+#set original parameters
+k <- c(1:20)
+valid.pred = c()
+valid.corr = c()
+
+#begin the iteration to find the best parameter
+for (i in k){
+  valid.pred <- knn(trainSet_scale, validSet_scale, trainSet[,16] ,k =i)
+  confus.valid <- confusionMatrix(valid.pred,as.factor(validSet[,16]))
+  confus.valid.class <-confus.valid$byClass
+  
+  valid.corr[i] <- mean(as.numeric(confus.valid.class[,11]))
+}
+
+k.opt <- which.max(valid.corr)
+plot(c(1:20), valid.corr, type="b", ylab="validation correct classification rate")
+```
+
+```{r,echo=FALSE, results='hide'}
+#prediction with the trained model 
+test.pred <- knn(trainSet_scale, testSet_scale, trainSet[,16] ,k =k.opt)
+
+# created confusion matrix
+confus <- confusionMatrix(test.pred,as.factor(testSet[,16]))
+dataclass <-confus$byClass
+mean_value <- mean(as.numeric(dataclass[,11]))
+print(mean_value)
+```
+    From the graph,the classification model achieves the best performance when k = 1. And use k =1 to fit the test dataset, the balanced accuracy is 0.5357226.
+
+
+## Linear/Quadratic Discriminant Analysis
+
+The linear discriminant analysis (LDA) and quadratic discriminant analysis (QDA) are linear and non-linear Fisher's Discriminant Analysis method.
+LDA optimizing the direction of separation among classes by finding linear functions of explanatory data with assumption of identical covariance matrices regardless of category.
+QDA is employed when equal variances assumption is violated, and it uses quadratic boundary of the predictors to distinguish between categories.
+
+```{r, echo=FALSE, results='hide'}
+# Prepare datasets for SVM method and also for LDA/QDA method
+svm_data<-subset(training_data,select = -c(ID,Amyl,Semer))
+svm_val<-subset(validation_data,select = -c(ID,Amyl,Semer))
+svm_test<-subset(testing_data,select = -c(ID,Amyl,Semer))
+```
+
+```{r, echo=FALSE, results='hide'}
+str(svm_data)
+str(svm_val)
+str(svm_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+library(MASS)  # For lda and qda functions
+```
+
+```{r, echo=FALSE}
+# Fit a Linear Discriminant Analysis (LDA) model
+lda_model <- lda(Amyl_grouped ~ ., data = svm_data)
+# Fit a Quadratic Discriminant Analysis (QDA) model
+qda_model <- qda(Amyl_grouped ~ ., data = svm_data)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Training, Validation and Testing predictions with LDA
+lda_training_pred <- predict(lda_model, training_data)$class
+lda_val_pred <- predict(lda_model, svm_val)$class
+lda_test_pred <- predict(lda_model, svm_test)$class
+
+# Training, Validation and Testing predictions with QDA
+qda_training_pred <- predict(qda_model, training_data)$class
+qda_val_pred <- predict(qda_model, svm_val)$class
+qda_test_pred <- predict(qda_model, svm_test)$class
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for LDA on training data
+conf_matrix_lda_train <- confusionMatrix(as.factor(lda_training_pred), as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for LDA on training data")
+print(conf_matrix_lda_train)
+
+# Confusion Matrix for LDA on validation data
+conf_matrix_lda_valid <- confusionMatrix(as.factor(lda_val_pred), as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for LDA on validation data")
+print(conf_matrix_lda_valid)
+
+# Confusion Matrix for LDA on testing data 
+conf_matrix_lda_test <- confusionMatrix(as.factor(lda_test_pred), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for LDA on testing data:")
+print(conf_matrix_lda_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for QDA on training data
+conf_matrix_qda_train <- confusionMatrix(as.factor(qda_training_pred), as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for QDA on training data")
+print(conf_matrix_qda_train)
+
+# Confusion Matrix for QDA on validation data
+conf_matrix_qda_valid <- confusionMatrix(as.factor(qda_val_pred), as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for QDA on validation data")
+print(conf_matrix_qda_valid)
+
+# Confusion Matrix for QDA on testing data
+conf_matrix_qda_test <- confusionMatrix(as.factor(qda_test_pred), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for QDA in testing data:")
+print(conf_matrix_qda_test)
+```
+
+```{r, echo=FALSE, fig.cap="Figure",fig.align="center", warning=FALSE}
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(tidyr)
+
+# Define the LDA and QDA data separately
+data_lda <- data.frame(
+  BalancedAccuracy = rep(c("LDA_Train_Bal_Acc", "LDA_Valid_Bal_Acc", "LDA_Test_Bal_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.52070, 0.515733, 0.517584, 0.522619, 0.51010, 0.53805, 0.500, 0.50000, 0.49409, 0.507399, 0.5000, 0.4944)
+)
+
+data_qda <- data.frame(
+  BalancedAccuracy = rep(c("QDA_Train_Bal_Acc", "QDA_Valid_Bal_Acc", "QDA_Test_Bal_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.7104, 0.70389, 0.71156, 0.58789, 0.6680, 0.61687, 0.67066, 0.47191, 0.6292, 0.5804, 0.60069, 0.50908)
+)
+
+combined_data <- rbind(data_lda, data_qda)
+
+result_table <- pivot_wider(combined_data, names_from = Class, values_from = Value)
+
+kable(result_table, caption = "Balanced Accuracy Values for LDA and QDA Models.") %>%
+  kable_styling(latex_options = c("scale_down"))
+```
+
+From the balanced accuracy tale for LDA and QDA models, the LDA model performs better in consistency than the QDA across training, validation, and test sets.
+Despite of the QDA model offers more flexible boundaries, which can be evidenced by the fact that QDA achieves higher balanced accuracy values acrros all classes compared to LDA, there is a significant drop from the tarining to validation and test sets in accuracy in both the LDA and QDA model, underscoring potential overfitting and less robust predictive ability for both models.
+
+Nevertheless, the overall performance of balanced accuracy rates for both the LDA and QDA models are relatively low, which suggests that neither model is well-fitted to the drug consumption dataset related to the research.
+Hence, alternative classification methods should be considered.
+
+## Support Vector Machines(SVM)
+
+Support Vector Machines (SVMs) is a maximum margin classification algorithm, handling both linear and nonliear data through kernelisation.
+Unlike LDA/QDA derive decision boundaries as the result of a probabilistic framework whereas SVM constructs decision boundaries by identifying the hyperplane that maximizes the margin between the support vectors of different classes.
+
+```{r, echo=FALSE, results='hide'}
+# Load the e1071 package for SVM
+library(e1071)
+```
+
+To apply support vector machines technique to predict the grouped categories of Amyl nitrite usage, various kernels (polynomial with degrees 2 and 3, radial basis function, and sigmoid respectively) are employed to train 5 distinct SVM models.
+
+```{r, echo=FALSE}
+# Train SVM model with different kernel
+model_linear <- svm(training_data$Amyl_grouped~ . , svm_data, 
+                    type = "C-classification", kernel = "linear")
+model_poly2 <- svm(training_data$Amyl_grouped ~ ., data = svm_data, 
+                   type = "C-classification", kernel = "polynomial", degree = 2)
+model_poly3 <- svm(training_data$Amyl_grouped ~ ., data = svm_data, 
+                   type = "C-classification", kernel = "polynomial", degree = 3)
+model_rbf <- svm(training_data$Amyl_grouped ~ ., data = svm_data, 
+                 type = "C-classification", kernel = "radial")
+model_sigmoid <- svm(training_data$Amyl_grouped ~ ., data = 
+                       svm_data, type = "C-classification", kernel = "sigmoid")
+```
+
+```{r, echo=FALSE, results='hide'}
+# Training, Validation and Testing predictions with linear kernel
+training_pred_linear <- predict(model_linear, svm_data)
+svm_pred_val_linear <- predict(model_linear, svm_val)
+svm_pred_test_linear <- predict(model_linear, svm_test)
+
+# Training, Validation and Testing predictions with Polynomial Kernel with Degree 2
+training_pred_poly2 <- predict(model_poly2, svm_data)
+svm_pred_val_poly2 <- predict(model_poly2, svm_val)
+svm_pred_test_poly2 <- predict(model_poly2, svm_test)
+
+# Training, Validation and Testing predictions with Polynomial Kernel with Degree 3
+training_pred_poly3 <- predict(model_poly3, svm_data)
+svm_pred_val_poly3 <- predict(model_poly3, svm_val)
+svm_pred_test_poly3 <- predict(model_poly3, svm_test)
+
+# Training, Validation and Testing predictions with RBF Kernel
+training_pred_rbf <- predict(model_rbf, svm_data)
+svm_pred_val_rbf <- predict(model_rbf, svm_val)
+svm_pred_test_rbf <- predict(model_rbf, svm_test)
+
+# Training, Validation and Testing predictions with Sigmoid Kernel
+training_pred_sigmoid <- predict(model_sigmoid, svm_data)
+svm_pred_val_sigmoid <- predict(model_sigmoid, svm_val)
+svm_pred_test_sigmoid <- predict(model_sigmoid, svm_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Load the caret package
+library(caret)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for Linear Kernel SVM on training data
+conf_matrix_linear_train <- confusionMatrix(as.factor(training_pred_linear), as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for Linear Kernel SVM on training data:")
+print(conf_matrix_linear_train)
+# Confusion Matrix for Linear Kernel SVM on validation data
+conf_matrix_linear_valid <- confusionMatrix(as.factor(svm_pred_val_linear), as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for Linear Kernel SVM on validation data:")
+print(conf_matrix_linear_valid)
+# Confusion Matrix for Linear Kernel SVM on testing data
+conf_matrix_linear_test <- confusionMatrix(as.factor(svm_pred_test_linear), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for Linear Kernel SVM on testing data:")
+print(conf_matrix_linear_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for Polynomial Kernel SVM with Degree 2 on training data
+conf_matrix_poly2_train <- confusionMatrix(as.factor(training_pred_poly2), as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 2 on training data:")
+print(conf_matrix_poly2_train)
+# Confusion Matrix for Polynomial Kernel SVM with Degree 2 on validation data
+conf_matrix_poly2_valid <- confusionMatrix(as.factor(svm_pred_val_poly2), as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 2 on validation data:")
+print(conf_matrix_poly2_valid)
+# Confusion Matrix for Polynomial Kernel SVM with Degree 2 on testing data
+conf_matrix_poly2_test <- confusionMatrix(as.factor(svm_pred_test_poly2), as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 2 on testing data:")
+print(conf_matrix_poly2_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for Polynomial Kernel SVM with Degree 3 on training data
+conf_matrix_poly3_train <- confusionMatrix(as.factor(training_pred_poly3),
+                                           as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 3 on training data:")
+print(conf_matrix_poly3_train)
+# Confusion Matrix for Polynomial Kernel SVM with Degree 3 on validation data
+conf_matrix_poly3_valid <- confusionMatrix(as.factor(svm_pred_val_poly3),
+                                           as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 3 on validation data:")
+print(conf_matrix_poly3_valid)
+# Confusion Matrix for Polynomial Kernel SVM with Degree 3 on testing data
+conf_matrix_poly3_test <- confusionMatrix(as.factor(svm_pred_test_poly3),
+                                          as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for Polynomial Kernel SVM Degree 3 on testing data:")
+print(conf_matrix_poly3_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for RBF Kernel SVM on training data
+conf_matrix_rbf_train <- confusionMatrix(as.factor(training_pred_rbf),
+                                   as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for RBF Kernel SVM on training data:")
+print(conf_matrix_rbf_train)
+# Confusion Matrix for RBF Kernel SVM on validation data
+conf_matrix_rbf_valid <- confusionMatrix(as.factor(svm_pred_val_rbf), 
+                                   as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for RBF Kernel SVM on validation data:")
+print(conf_matrix_rbf_valid)
+# Confusion Matrix for RBF Kernel SVM on testing data
+conf_matrix_rbf_test <- confusionMatrix(as.factor(svm_pred_test_rbf),
+                                   as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for RBF Kernel SVM on testing data:")
+print(conf_matrix_rbf_test)
+```
+
+```{r, echo=FALSE, results='hide'}
+# Confusion Matrix for Sigmoid Kernel SVM on training data
+conf_matrix_sigmoid_train <- confusionMatrix(as.factor(training_pred_sigmoid),
+                                             as.factor(training_data$Amyl_grouped))
+print("Confusion Matrix for Sigmoid Kernel SVM on training data:")
+print(conf_matrix_sigmoid_train)
+# Confusion Matrix for Sigmoid Kernel SVM on validation data
+conf_matrix_sigmoid_valid <- confusionMatrix(as.factor(svm_pred_val_sigmoid),
+                                             as.factor(validation_data$Amyl_grouped))
+print("Confusion Matrix for Sigmoid Kernel SVM on validation data:")
+print(conf_matrix_sigmoid_valid)
+# Confusion Matrix for Sigmoid Kernel SVM on testing data
+conf_matrix_sigmoid_test <- confusionMatrix(as.factor(svm_pred_test_sigmoid),
+                                            as.factor(testing_data$Amyl_grouped))
+print("Confusion Matrix for Sigmoid Kernel SVM on testing data:")
+print(conf_matrix_sigmoid_test)
+```
+
+```{r, echo=FALSE, fig.cap="Figure",fig.align="center", warning=FALSE}
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(tidyr)
+
+# SVM Linear & Polynomial Degree 2
+svm_lin_poly2 <- data.frame(
+  Blanced_Accuracy = rep(c("SVM_Lin&Poly2_Train_Acc", "SVM_Lin&Poly2_Valid_Acc", "SVM_Lin&Poly2_Test_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500)
+)
+
+# Polynomial Degree 3 SVM
+svm_poly3 <- data.frame(
+  Blanced_Accuracy = rep(c("SVM_Poly3_Train_Acc", "SVM_Poly3_Valid_Acc", "SVM_Poly3_Test_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.54064, 0.54507, 0.529605, 0.533981, 0.52616, 0.527357, 0.497899, 0.50000, 0.49831, 0.498031, 0.512195, 0.496269)
+)
+
+# RBF Kernel SVM
+svm_rbf <- data.frame(
+  Blanced_Accuracy = rep(c("SVM_RBF_Train_Acc", "SVM_RBF_Valid_Acc", "SVM_RBF_Test_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.51108, 0.515696, 0.506579, 0.50000, 0.51724, 0.531341, 0.500, 0.50000, 0.500, 0.500, 0.500, 0.500)
+)
+
+# Sigmoid Kernel SVM
+svm_sigmoid <- data.frame(
+  Blanced_Accuracy = rep(c("SVM_Sigmoid_Train_Acc", "SVM_Sigmoid_Valid_Acc", "SVM_Sigmoid_Test_Acc"), each = 4),
+  Class = c("Never", "Decade+", "LastDec", "LastYear"),
+  Value = c(0.47122, 0.481104, 0.49777, 0.513219, 0.50415, 0.48008, 0.510651, 0.49438, 0.45701, 0.493619, 0.483270, 0.4832)
+)
+
+svm_data <- rbind(svm_lin_poly2, svm_poly3, svm_rbf, svm_sigmoid)
+
+svm_data_wide <- svm_data %>% 
+  pivot_wider(names_from = Class, values_from = Value)
+
+kable(svm_data_wide, 
+      caption = "Balanced Accuracy for SVM Models.", 
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("scale_down")) 
+```
+
+The summary table of balanced accuracy scores for the SVM models with various kernels demonstrates that:
+  The performance of the linear model and Ploynomial Kernel with Degree 2 model both appear to be consistent across training, validation and test datasets, indicating stable performance.
+  This Polynomial Kernel with Degree 3 model showed higher balanced accuracy rates on the training dataset compared to the other kernels.
+    However, some overfitting issues may be present due to the decrease in balanced accuracy when transitioning from training to validation and test sets.
+   The RBF kernel, similar to the linear kernel and polynomial kernel, shows reletively consistent performance across datasets.
+  The sigmoid kernel shows lower balanced accuracy trends than the other kernels across datasets, indicating that it may not be suitable for this classification project.
+
+Therefore, given the balance between accuracy, generalisation and model complexity, the RBF kernel offers slightly outstanding adaptability and robustness across training, validation and testing data distributions.
+However, none of the kernels is performing strong performance, with the balanced accuracy values around 0.5 across all classes with all kernels as summarised.
+This result may indicate that the drug consumption by time does not exhibit strong linear or simple non-linear separability, model tuning should be considered for next step by hyperparameter optimization, or that SVM may not be the optimal classifier choice for solving this classification problem without further feature engineering or consideration of other more complex models.
+
+## Nerual Network (NNs)
+
+For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well.
+Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network.
+Each neuron receives one or more inputs, processes those inputs, and produces an output.
+The main components of neural network information processing include inputs, weights, summation functions.
+
+With 5 hidden layers, the neural model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting.
+Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can gain some summary.
+
+```{r,echo=FALSE, results='hide'}
+library(neuralnet)
+library(nnet)
+#neural network
+neural_data<-subset(training_data,select = -c(ID,Amyl,Semer))
+neural_val<-subset(validation_data,select = -c(ID,Amyl,Semer))
+neural_test<-subset(testing_data,select = -c(ID,Amyl,Semer))
+```
+
+```{r,echo=FALSE, results='hide'}
+#since our dataset has some character variables which will influence the neural 
+#network model, we remove variable 'ID', 'Amyl' and 'Semer'
+#neural network model
+#The weights of the neural network are usually initialized randomly at the 
+#beginning of training. Using set.seed ensures that the initial values of the 
+#weights are the same each time the model is trained.
+set.seed(1)
+#For construct the neural network model, we use 'Amyl_grouped' as the response 
+#variable and other variables as predicted variables. And with hidden layer1, 3
+#or 5, we find model with 5 hidden layers has appropriate explain even though model with 2 layers has the highest accuracy. Since our
+#task is to classify, we set non-linear output. We set threshold = 0.01, which 
+#specifies the convergence criteria during model training. This means that when 
+#the total error improvement of the model is less than 0.01, the training 
+#process will stop.
+neural_model <- neuralnet(Amyl_grouped ~ ., data = neural_data, hidden = c(5), 
+                          linear.output = FALSE,threshold = 0.01)
+neural_model$result.matrix
+neural_model
+```
+
+```{r,echo=FALSE}
+#training data performance we calculate accuracy and balanced accuracy of the 
+#neural network model for training data
+training_expalin<-subset(neural_data,select = -Amyl_grouped)
+train_pred<-compute(neural_model,training_expalin)
+net_result<-train_pred$net.result
+levels <- levels(neural_data$Amyl_grouped)
+predicted_class_indices <- apply(net_result, 1, which.max)
+predicted_classes <- levels[predicted_class_indices]
+actual_classes <- neural_data$Amyl_grouped
+```
+
+```{r,echo=FALSE,results='hide'}
+#since our response variable is multivariate classification, we need confusion
+#matrix
+conf_matrix_train <- table(Predicted = predicted_classes, 
+                           Actual = actual_classes)
+print(conf_matrix_train)
+accuracy_train <- sum(diag(conf_matrix_train)) / sum(conf_matrix_train)
+print(accuracy_train)
+recall_per_class_train <- diag(conf_matrix_train) / rowSums(conf_matrix_train)
+balanced_accuracy_train <- mean(recall_per_class_train)
+print(balanced_accuracy_train)
+#confusion matrix plot
+conf_matrix_train_df <- as.data.frame(as.table(conf_matrix_train))
+```
+
+```{r,echo=FALSE,fig.align="center",warning=FALSE}
+#| label: fig-confusion matrix 
+#| fig-cap: Confusion matrix for training data
+conf_matrix_plot <- matrix(c(867, 92, 88, 71,
+                             0, 0, 0, 2,
+                             26, 52, 16, 7,
+                            14, 7, 48, 23),
+                      nrow = 4, byrow = TRUE)
+
+colnames(conf_matrix_plot) <- c("Never", "Decade+", "LastDec", "LastYear")
+rownames(conf_matrix_plot) <- c("Never", "Decade+", "LastDec", "LastYear")
+kable(conf_matrix_plot, caption = "Confusion Matrix for Training Data")%>%
+  kable_styling(latex_options = c("scale_down"))
+
+```
+
+The confusion matrix indicates that:
+
+-   The values along the main diagonal of the confusion matrix (from the bottom left to the top right) represent the number of instances that were correctly classified.
+    For the "Never Used" category, there are 867 instances that were correctly classified, which is the largest number on the diagonal, indicating that the model performs best on this category.
+
+-   The off-diagonal values represent the number of instances that were misclassified.
+    For instance, out of the actual "Used Over a Decade Ago" instances, 48 were incorrectly classified as "Used in Last Year to Decade".
+    These types of errors are known as "false negatives" in machine learning.
+
+-   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category, which indicates that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'.
+    In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
+
+```{r,echo=FALSE,results='hide'}
+#"Never Used".
+#validation This is same for validation data.
+predictions_val <- compute(neural_model, neural_val[,c('Age','Gender',
+                                                       'Education','Country',
+                                                       'Ethnicity','Nscore',
+                                                       'Escore','Oscore',
+                                                       'Ascore','Cscore',
+                                                       'Impulsive','SS')])
+pred_values_val <- predictions_val$net.result
+#accuracy
+predicted_classes_val <- apply(pred_values_val, 1, function(x) which.max(x) - 1)  
+#confusion matrix:the actual and predicted classes are passed as arguments.
+conf_matrix_val <- table(Actual =neural_val$Amyl_grouped, 
+                         Predicted = predicted_classes_val)
+print(conf_matrix_val)
+#we calculate accuracy by summing the diagonal elements of the confusion matrix 
+#divided the total 
+accuracy_val <- sum(diag(conf_matrix_val)) / sum(conf_matrix_val)
+print(paste("Accuracy of validation:", accuracy_val))
+#We find that there is subtle gaps between accuracy of model for training and 
+#validation data, indicating this neural network model isn't overfit.
+# rowsum
+row_totals <- rowSums(conf_matrix_val)
+# replace NA
+recall_per_class_val <- rep(NA, length(row_totals))
+valid_rows <- row_totals > 0
+recall_per_class_val[valid_rows] <- diag(conf_matrix_val)[valid_rows] / row_totals[valid_rows]
+balanced_accuracy_val <- mean(recall_per_class_val, na.rm = TRUE)
+
+print(balanced_accuracy_val)
+```
+
+```{r,echo=FALSE,results='hide'}
+#test This is same for test data. We apply the final neural model for the test 
+#data
+predictions <- neuralnet::compute(neural_model, neural_test[,c('Age','Gender','Education',
+                                                    'Country','Ethnicity',
+                                                    'Nscore','Escore','Oscore',
+                                                    'Ascore','Cscore',
+                                                    'Impulsive','SS')])
+pred_values <- predictions$net.result
+#accuracy
+predicted_classes_test <- apply(pred_values, 1, function(x) which.max(x) - 1)  
+#confusion matrix:the actual and predicted classes are passed as arguments.
+conf_matrix_test <- table(Actual =neural_test$Amyl_grouped, 
+                          Predicted = predicted_classes_test)
+print(conf_matrix_test)
+
+#We calculate accuracy by summing the diagonal elements of the confusion matrix 
+#divided the total 
+accuracy <- sum(diag(conf_matrix_test)) / sum(conf_matrix_test)
+print(paste("Accuracy of test:", accuracy))
+row_totals_test <- rowSums(conf_matrix_test)
+recall_per_class_test <- rep(NA, length(row_totals_test))
+valid_rows_test <- row_totals_test > 0
+recall_per_class_test[valid_rows] <- diag(conf_matrix_test)[valid_rows_test] / row_totals_test[valid_rows_test]
+balanced_accuracy_test <- mean(recall_per_class_test, na.rm = TRUE)
+print(balanced_accuracy_test)
+```
+
+## Tree-based Method
+
+\
+Classification trees are a non-parametric method well-suited for complex data sets.
+They start at the root node, assessing features to classify instances and branching out to child nodes, each representing different features.
+This process recursively continues until reaching a leaf node where the instance is classified.
+However,when a tree grows large with tons of splits, we may faced the circumstance of overfitting.
+In order to avoid this situation as much as possible and reduce the impact of overfitting on the generalization of the model, we can prune a full tree to a subtree by using cost-complexity pruning.
+
+In this question, due to the imbalance of data between categories, we prune the tree based on the value of balanced accuracy.
+To be more specific, We consider finding the cp of the tree that maximizes balanced accuracy on validation set, while ensuring that the difference between the training set and the validation set is less than the specified tolerance.
+
+-   Construct the full tree with $minsplit = 2$ ,$maxdepth = 30$, $minbucket = 7$ .
+
+-   Set $tolerance=0.06$ to test whether the model is overfitting ($|test_{balancedacu}-valid_{balanceacu}|<=tolerance$)
+
+-   Find out the best cp of tree with maximum balanced accuracy on validation set
+
+-   Pruned the tree with best cp and calculated the balanced accuracy of pruned tree on testing set.
+
+```{r,echo=FALSE,results='hide', results='hide'}
+str(training_data)
+str(validation_data)
+```
+
+```{r,echo=FALSE}
+# subset the data set
+train_data<-subset(training_data,
+  select=c(-Semer,-ID,-Amyl))
+valid_data<-subset(validation_data,
+  select=c(-Amyl,-Semer,-ID))
+test_data<-subset(testing_data,
+  select=c(-Amyl,-Semer,-ID))
+```
+
+```{r echo=FALSE}
+# definite the function to prune
+find_best_cp <- function(full_tree, training_data, validation_data, cp_start, cp_end, steps, tolerance) {
+  cp_values <- seq(cp_start, cp_end, length.out = steps)
+  best_accuracy <- 0
+  best_cp <- 0
+  best_tree <- NULL
+  mean_balanced_accuracy<-0
+  balance_accuracy<-c()
+  confusion_matrix<-c()
+  
+  for(cp in cp_values) {
+    # prune the tree
+    pruned_tree <- prune(full_tree, cp = cp) 
+  
+    #predict the result of train data in pruned tree and constrcut confusion matrix
+    predictions_train <- predict(pruned_tree, training_data, type = "class")
+    conf_matrix_train <- confusionMatrix(predictions_train, 
+                                         training_data$Amyl_grouped)
+    
+    #calculate accuracy balanced accuracy and mean balanced accuracy for training data
+    balance_train <- conf_matrix_train$byClass[,"Balanced Accuracy"]
+    mean_balance_train<-mean(balance_train)
+    accuracy_train<-conf_matrix_train$overall["Accuracy"]
+    
+    # predict in validation dataset
+    valid_pred <- predict(pruned_tree, validation_data, type = "class")
+    
+    # calculate the weighted balanced accuracy for validation dataset
+    predictions_validation <- predict(pruned_tree, validation_data, type = "class")
+    conf_matrix_validation <- confusionMatrix(predictions_validation,
+                                              validation_data$Amyl_grouped)
+    
+    accuracy_validation<-conf_matrix_validation$overall["Accuracy"]
+    balance_valid <- conf_matrix_validation$byClass[,"Balanced Accuracy"]
+    mean_balance_valid<-mean(balance_valid)
+    # examin whether the balanced accuracy between train and valid is smaller than tolerance to avoid overfitting
+    if((abs(mean_balance_train-mean_balance_valid)) <= tolerance){
+      if(mean_balance_valid > mean_balanced_accuracy){
+         mean_balanced_accuracy<- mean_balance_valid
+         best_cp <- cp
+         best_tree <- pruned_tree
+         best_accuracy<-accuracy_validation
+         balance_accuracy<-balance_valid
+         confusion_matrix<-conf_matrix_validation
+      }
+    }
+  }
+  
+  list(best_tree = best_tree, 
+       best_cp = best_cp, 
+       best_accuracy = best_accuracy ,
+       mean_balanced_accuracy=mean_balanced_accuracy,
+       balance_accuracy=balance_accuracy,
+       confusion_matrix=confusion_matrix)
+}
+```
+
+```{r echo=FALSE, results='hide'}
+# construct full tree in training data set
+set.seed(12345)
+full_tree <- rpart(Amyl_grouped~., data=train_data, method="class", control=rpart.control(minsplit = 2 ,maxdepth = 30, cp = -1, minbucket = 7))
+printcp(full_tree)
+```
+
+```{r echo=FALSE,fig.width=5, fig.height=3, include=FALSE}
+plotcp(full_tree)
+```
+
+```{r echo=FALSE}
+# find best cp for the tree we build up 
+best_model <- find_best_cp(full_tree = full_tree, 
+                           training_data = train_data, 
+                           validation_data = valid_data,
+                           cp_start = 0.0098, 
+                           cp_end = 0, 
+                           steps = 200,
+                           tolerance = 0.06) 
+```
+
+```{r echo=FALSE, results='hide'}
+print(best_model$best_cp)
+```
+
+```{r echo= FALSE,results='hide'}
+# prune best tree
+best_tree<- prune(full_tree,cp = best_model$best_cp)
+best_tree
+```
+
+```{r echo=FALSE, results='hide'}
+# balanced accuracy of test data table for best accuracy tree 
+predictions_test <- predict(best_tree, test_data, type = "class")
+      
+# calculate the weighted_balanced_accuracy_test 
+conf_matrix_test <- confusionMatrix(predictions_test,test_data$Amyl_grouped)
+balance_test <- conf_matrix_test$byClass[,"Balanced Accuracy"]
+accuracy_test<- conf_matrix_test$overall["Accuracy"]
+mean_balance_test<-mean(balance_test)
+print(balance_test)
+print(mean_balance_test)
+```
+
+```{r echo=FALSE,results='hide'}
+print(conf_matrix_test$table)
+```
+
+Based on the process above, the cp of the pruned tree is $0.00615578$.
+Here is the confusion matrix of testing data set under the pruned tree:
+
+```{r,echo=FALSE,warning=FALSE,fig.align="center"}
+#| label:  
+#| tbl-cap: Model balanced accuracy
+library(kableExtra)
+# make a table for the confusion matrix
+confusion_matrix <- matrix(c(180, 22, 30, 12, 8, 5, 3, 0, 10, 2, 8, 2, 0, 0, 0, 1), 
+                           nrow = 4, byrow = TRUE,
+                           dimnames = list(c("Never", "Decade+", "LastDec", "LastYear"),
+                                           c("Never", "Decade+", "LastDec", "LastYear")))
+
+confusion_data_frame <- data.frame(confusion_matrix)
+knitr::kable(confusion_data_frame,caption = "Confusion matrix for testing data")%>%
+  kable_styling(latex_options = c("scale_down"))
+```
+
+According to the confusion matrix, the numbers on the diagonal being greater than the sum of the rest suggests that this may be a prediction with good accuracy.
+Meanwhile, it is obvious that 180 observations in category "Never used" is successfully predicted, whilst for other categories the amount of "True Positive" is quite lower.
+This situation may be due to an imbalance in the number of data points across different categories.
+It's clear that the 'Never Used' category has far more data points than the other categories, hence we should consider the balanced accuracy of the classification tree model.
+Here is the table of balanced accuracy for testing data set under the pruned tree:
+
+```{r echo=FALSE,warning=FALSE, fig.align="center"}
+#| label: tbl-tree1
+#| tbl-cap: Balanced accuracy for different class in testing data
+# build up dataframe for result previous
+tree_test <- data.frame(
+  Class = c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year to Day", "Average Balanced Accuracy"),
+  Accuracy = c(0.5780749, 0.5645534, 0.5686354, 0.5333333, 0.5611492)
+)
+# construct a table
+knitr::kable(tree_test, col.names = c("Class", "Balanced Accuracy"), caption = "Balanced accuracy of testing data")%>%
+  kable_styling(latex_options = c("scale_down"))
+```
+
+The table above indicates that the balanced accuracy for the categories "Used in Last Decade" and "Used Over a Decade Ago" is nearly identical, averaging around $0.566$.
+There is a slight improvement of approximately $0.01$ for the "Never Used" category.
+However, the category "Used in Last Year to Day" exhibits the lowest balanced accuracy.
+The overall mean balanced accuracy of the model stands at $0.561149$, which esceeds the expected accuracy of random classification.
+
+# Model Comparison
+
+Because our response variables is multiclassified and the categories in our data are unbalanced, with the 'Never Used' category having the most data, we chose balanced accuracy for model comparisons.
+From the table below, we indicate that tree-based model is the most suitable model for this data, with 0.561 balanced accuracy.
+
+```{r,echo=FALSE}
+#| label:  Balanced accuracy
+#| tbl-cap: Model balanced accuracy
+library(knitr)
+library(kableExtra)
+amyl_usage <- data.frame(
+  model_method = c("K-nearest Neighbours", "Linear Discriminant Analysis", "Support Vector Machines", "Nerual Network", 'Tree-based'),
+  Balanced_accuracy = c(0.532, 0.494, 0.5, 0.347, 0.561)
+)
+knitr::kable(amyl_usage, caption = "Balanced accuracy for different models")
+```
+
+# Conclusion
+
+Based on the analysis above, In K-nearest Neighbours,Linear Discriminant Analysis,Support Vector Machines,Neural Network,and Tree-based methods, the classification tree has the highest balanced accuracy.
+Therefore, we choose it for classifying and predicting medication timing.
+Below is the specific decision tree diagram.
+
+```{r echo= FALSE,fig.width=10, fig.height=6}
+#| label: fig-treebest
+#| fig-cap: figure of the best tree.
+
+# plot the best tree on training data.
+rpart.plot(best_tree,type=2,extra=4)
+```
