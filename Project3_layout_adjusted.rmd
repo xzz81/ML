@@ -50,11 +50,6 @@ This report collects 1885 respondents with 12 attributes, including education le
 
 The main aim of this report is to find the relationships between personality traits, demographic factors, and drug consumption patterns.
 
-This report is structured as follows: The first section sets out the context of the study and cleaning the data.
-The second section makes Explanatory Data Analysis (EDA) and model building with 5 classification methods, including knearest neighbours, linear/quadratic discriminant analysis, tree-based methods, support vector machines, neural networks.
-The third section shows the 'best' model and results.Finally, the discussion section contextualizes these findings within the broaderfield of psychology and suggesting avenues for future research.
-
-
 
 # Grouping Data by Amyl Categories
 
@@ -63,8 +58,6 @@ Then, we set up the training data, test data, and validation data, with proporti
 
 
 However, for Impulsive and SS scores, Impulsive has a right-skewed distribution, and SS has a left-skewed distribution, both indicating a Poisson distribution.
-
-# Data Processing
 
 Based on the dataset, we found that most respondents believe they belong to Group 'CL0' .
 Therefore, we conducted our analysis based on the data from the 'Semer' that only included Group 'CL0'.
@@ -709,12 +702,10 @@ This result may indicate that the drug consumption by time does not exhibit stro
 ## Nerual Network (NNs)
 
 For classification method choosing, we use NNs method since it handles nonlinearity associated with the data well.
-Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network.
-Each neuron receives one or more inputs, processes those inputs, and produces an output.
+Neural networks are inspired by the architecture of biological neural systems, where processing elements, analogous to neurons, form the core of the network. Each neuron receives one or more inputs, processes those inputs, and produces an output.
 The main components of neural network information processing include inputs, weights, summation functions (the weighted average of all input data entering the processing element (PE), transformation functions, and outputs.
 
-This model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting in neural model.
-Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can figure some summary.
+This model's balanced accuracy for training data and validation data are 0.29 and 0.30, showing that there is no overfitting in neural model. Finally, the balanced accuracy for test data is 0.347 and combined with confusion matrix, we can figure some summary.
 
 ```{r,echo=FALSE, results='hide'}
 library(neuralnet)
@@ -789,7 +780,7 @@ kable(conf_matrix_plot, caption = "Confusion Matrix for Training Data")%>%
 
 ```
 
-The confusion matrix output indicates that:
+The confusion matrix indicates that:
 
 -   The values along the main diagonal of the confusion matrix (from the bottom left to the top right) represent the number of instances that were correctly classified.
     For the "Never Used" category, there are 867 instances that were correctly classified, which is the largest number on the diagonal, indicating that the model performs best on this category.
@@ -798,8 +789,7 @@ The confusion matrix output indicates that:
     For instance, out of the actual "Used Over a Decade Ago" instances, 48 were incorrectly classified as "Used in Last Year to Decade".
     These types of errors are known as "false negatives" in machine learning.
 
--   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category. 
-    The model's high accuracy in this category might be partly due to the over-representation of "Never Used" instances in the dataset, as the dataset shown. However, the performance of this neural model concentrates on the category 'Never', indicating that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
+-   There is a large concentration of instances in the "Never Used" category, showing a skewed distribution of the dataset towards this category, which indicates that this model might struggle to predict less when model predict categories such as 'Used in Last Decade'. In summary, this model just shows good performance on 'Never Used' compared other categories and there is room for improvement in handling imbalanced data and rare categories.
 
 ```{r,echo=FALSE,results='hide'}
 #"Never Used".
