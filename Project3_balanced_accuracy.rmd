@@ -784,8 +784,7 @@ conf_matrix_plot <- matrix(c(14, 7, 48, 23,
 
 colnames(conf_matrix_plot) <- c("Never Used", "Used Over a Decade Ago", "Used in Last Decade", "Used in Last Year to Day")
 rownames(conf_matrix_plot) <- c("Used Over a Decade Ago", "Used in Last Year to Day", "Used in Last Decade", "Never Used")
-kable(conf_matrix_plot, caption = "Confusion Matrix for Training Data")%>%
-  kable_styling(font_size = 7)
+kable(conf_matrix_plot, caption = "Confusion Matrix for Training Data")
 
 ```
 
