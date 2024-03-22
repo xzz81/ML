@@ -857,19 +857,15 @@ print(balanced_accuracy_test)
 
 ## Tree-based Method
 
-\
-Classification trees are a non-parametric method well-suited for complex data sets.
-They start at the root node, assessing features to classify instances and branching out to child nodes, each representing different features.
-This process recursively continues until reaching a leaf node where the instance is classified.
-However,when a tree grows large with tons of splits, we may faced the circumstance of overfitting.
-In order to avoid this situation as much as possible and reduce the impact of overfitting on the generalization of the model, we can prune a full tree to a subtree by using cost-complexity pruning.
+Classification trees are a non-parametric method well-suited for complex data sets. They start at the root node, assessing features to classify instances and branching out to child nodes, each representing different features. This process recursively continues until reaching a leaf node where the instance is classified.However,when a tree grows large with tons of splits, we may faced the circumstance of overfitting. In order to avoid this situation as much as possible and reduce the impact of overfitting on the generalization of the model, we can prune a full tree to a subtree by using cost-complexity pruning.
 
 In this question, due to the imbalance of data between categories, we prune the tree based on the value of balanced accuracy.
 To be more specific, We consider finding the cp of the tree that maximizes balanced accuracy on validation set, while ensuring that the difference between the training set and the validation set is less than the specified tolerance.
 
 -   Construct the full tree with $minsplit = 2$ ,$maxdepth = 30$, $minbucket = 7$ .
 
--   Set $tolerance=0.06$ to test whether the model is overfitting ($|test_{balancedacu}-valid_{balanceacu}|<=tolerance$)
+-   Condition:Set $tolerance=0.06$ to test whether the model is overfitting 
+    ($|test_{balancedacu}-valid_{balanceacu}|<=tolerance$)
 
 -   Find out the best cp of tree with maximum balanced accuracy on validation set
 
